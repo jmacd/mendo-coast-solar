@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A reproducible public-data study of community solar and storage sites on the Mendocino Coast.">
+  <title>Mendocino Coast Solar Siting Study</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="wordmark" href="./">Mendocino Coast Solar</a>
+    <nav aria-label="Primary navigation">
+      <a href="#method">Method</a>
+      <a href="#grid">The grid</a>
+      <a href="#sources">Sources</a>
+      <a class="nav-cta" href="candidate-map.html">Explore candidates</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">An open, reproducible siting study</p>
+        <h1>Where could community solar work on the Mendocino Coast?</h1>
+        <p class="lede">The question started with one promising field in Caspar.
+          This study turns that local observation into a coast-wide search for
+          land where solar and battery storage could serve coastal communities.</p>
+        <div class="actions">
+          <a class="button primary" href="candidate-map.html">Open the candidate map</a>
+          <a class="button secondary" href="downloads.html">Download the data</a>
+        </div>
+        <p class="caveat">Screening results, not approved projects or PG&amp;E
+          interconnection determinations.</p>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <div class="sun"></div>
+        <div class="coast coast-back"></div>
+        <div class="coast coast-front"></div>
+        <div class="panel panel-one"></div>
+        <div class="panel panel-two"></div>
+        <div class="panel panel-three"></div>
+      </div>
+    </section>
+
+    <section class="snapshot" aria-label="Study snapshot">
+      <div><strong>10,112</strong><span>coastal parcel features examined</span></div>
+      <div><strong>182</strong><span>solar-storage candidates</span></div>
+      <div><strong>13</strong><span>with at least 500 kW static PV ICA</span></div>
+      <div><strong>22</strong><span>candidates zoned RR or RMR</span></div>
+    </section>
+
+    <section class="section transmission-story">
+      <div class="section-heading">
+        <p class="eyebrow">The first grid lesson</p>
+        <h2>A long coast has only a few connections to the wider grid</h2>
+        <p>Electricity is physical: it must travel over wires, and every wire
+          has a finite current limit. Generating power in one place and selling
+          it somewhere else depends on having enough capacity along the entire
+          path between them.</p>
+      </div>
+      <img class="wide-graphic grid-map" src="transmission-map.svg"
+        alt="Map showing the long Mendocino Coast transmission network and its few connections toward the wider inland grid.">
+      <div class="finding-grid">
+        <article>
+          <h3>Every wire has a limit</h3>
+          <p>Conductors and grid equipment can safely carry only a finite
+            electrical current. The weakest part of a route can constrain how
+            much additional power reaches the other end.</p>
+        </article>
+        <article>
+          <h3>There are few paths inland</h3>
+          <p>The public map shows a sparse coastal transmission network with
+            only a few links toward the larger inland grid. Existing customers
+            and generators already share those paths.</p>
+        </article>
+        <article>
+          <h3>Use energy near where it is made</h3>
+          <p>This motivates a different search: find suitable coastal sites,
+            pair intermittent solar with storage, and match generation to
+            nearby homes and evening demand.</p>
+        </article>
+      </div>
+      <aside class="note"><strong>The motivating idea:</strong> when moving
+        large amounts of electricity away from the coast may require scarce
+        grid capacity or expensive upgrades, it is worth asking where the coast
+        can generate, store, and use more of its own energy locally.</aside>
+    </section>
+
+    <section class="story section">
+      <div class="section-heading">
+        <p class="eyebrow">The story</p>
+        <h2>From accidental discovery to a public method</h2>
+      </div>
+      <div class="story-grid">
+        <p class="pullquote">“We know a couple of possible sites because we live
+          nearby. How do we expand that knowledge across the whole coast?”</p>
+        <div class="prose">
+          <p>A useful coastal project needs more than a sunny parcel. It needs a
+            large, connected area of buildable land; access to three-phase
+            distribution; a community that can use the energy; storage for foggy
+            weather and evening demand; and a realistic path through environmental,
+            visual, and land-use constraints.</p>
+          <p>The model downloads public GIS and PG&amp;E planning data, applies the
+            same tests to every parcel in the Mendocino County Coastal Zone, and
+            publishes the assumptions and intermediate measures. Local knowledge
+            still matters: the ranking is a way to focus investigation, not replace it.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="method" class="section method">
+      <div class="section-heading">
+        <p class="eyebrow">How the analysis works</p>
+        <h2>A funnel, not a black box</h2>
+        <p>Hard screens establish whether a site is a plausible candidate.
+          A weighted score then compares candidates that remain.</p>
+      </div>
+      <img class="wide-graphic" src="analysis-pipeline.svg"
+        alt="Analysis pipeline from public data through exclusions, terrain and grid analysis to 182 ranked candidates.">
+
+      <div class="method-grid">
+        <article>
+          <span class="step">01</span>
+          <h3>Define usable land</h3>
+          <p>Clip parcels to the Coastal Zone, remove wetlands and selected
+            protected or important farmland, and exclude Fort Bragg and County
+            Open Space zoning.</p>
+        </article>
+        <article>
+          <span class="step">02</span>
+          <h3>Measure the terrain</h3>
+          <p>Find the largest connected area with open land cover and slope no
+            greater than 10 degrees. A candidate needs at least 10 contiguous acres.</p>
+        </article>
+        <article>
+          <span class="step">03</span>
+          <h3>Connect land to the grid</h3>
+          <p>Require a three-phase PG&amp;E section within one kilometer, then
+            report feeder demand, static hosting capacity, and nearby transmission.</p>
+        </article>
+        <article>
+          <span class="step">04</span>
+          <h3>Test community fit</h3>
+          <p>Compare local residential and evening demand, development intensity,
+            solar resource, industrial reuse, and modeled visibility from Highway 1.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section score-section">
+      <div class="section-heading">
+        <p class="eyebrow">The scoring function</p>
+        <h2>What the ranking values</h2>
+        <p>Each component is normalized from 0 to 1 and multiplied by its
+          published weight. The weights sum to 100%.</p>
+      </div>
+      <div class="score-layout">
+        <div class="score-bars" role="img" aria-label="Scoring categories: land 35 percent, local demand 32 percent, low highway visibility 15 percent, grid access 11 percent, and solar resource 7 percent.">
+          <div class="bar-row"><span>Land suitability</span><div class="bar"><i style="width:35%"></i></div><strong>35%</strong></div>
+          <div class="bar-row"><span>Local demand</span><div class="bar"><i style="width:32%"></i></div><strong>32%</strong></div>
+          <div class="bar-row"><span>Low highway visibility</span><div class="bar"><i style="width:15%"></i></div><strong>15%</strong></div>
+          <div class="bar-row"><span>Grid access</span><div class="bar"><i style="width:11%"></i></div><strong>11%</strong></div>
+          <div class="bar-row"><span>Solar resource</span><div class="bar"><i style="width:7%"></i></div><strong>7%</strong></div>
+        </div>
+        <div class="score-detail">
+          <h3>Exact components</h3>
+          <dl>
+            <div><dt>Land · 35%</dt><dd>Contiguous land 10, flatness 5, open cover 3,
+              undeveloped land 10, industrial reuse 7</dd></div>
+            <div><dt>Demand · 32%</dt><dd>Residential customers 16, evening feeder peak 16</dd></div>
+            <div><dt>Scenic · 15%</dt><dd>Low modeled Highway 1 exposure 15</dd></div>
+            <div><dt>Grid · 11%</dt><dd>Distribution proximity 8, static ICA 2,
+              transmission proximity 1</dd></div>
+            <div><dt>Sun · 7%</dt><dd>NASA POWER solar climatology 7</dd></div>
+          </dl>
+        </div>
+      </div>
+      <aside class="note"><strong>Why static ICA is only 2%:</strong> ICA estimates
+        additional instantaneous export on a distribution section. It is not a
+        limit on panel nameplate or daily energy. Batteries, export controls,
+        curtailment, upgrades, and transmission interconnection can change the
+        feasible project design.</aside>
+    </section>
+
+    <section id="grid" class="section grid-section">
+      <div class="section-heading">
+        <p class="eyebrow">How the coastal grid works</p>
+        <h2>Power, energy, and the wires are different constraints</h2>
+        <p>The diagram shows the two interconnection paths considered by the
+          study and why storage matters on a coast where demand peaks after sunset.</p>
+      </div>
+      <img class="wide-graphic grid-graphic" src="grid-diagram.svg"
+        alt="Diagram showing solar and battery connecting to a 12 kilovolt distribution feeder serving homes through a substation, with a separate possible connection to a 60 kilovolt transmission line.">
+      <div class="grid-explainers">
+        <article>
+          <h3>12 kV distribution</h3>
+          <p>Neighborhood feeders deliver power from a substation to homes.
+            A solar project can connect locally, but voltage, conductors,
+            protection, reverse flow, and shared upstream equipment can limit export.</p>
+        </article>
+        <article>
+          <h3>Static ICA</h3>
+          <p>PG&amp;E’s Integration Capacity Analysis estimates additional
+            instantaneous generation a line section may accept without identified
+            upgrades. It is a planning screen, not permission to interconnect.</p>
+        </article>
+        <article>
+          <h3>Solar plus storage</h3>
+          <p>A 1 MW array might generate roughly 5 MWh on a good day. A battery
+            can absorb daytime production, smooth cloud variation, serve evening
+            load, and keep export within an approved limit.</p>
+        </article>
+        <article>
+          <h3>60 kV transmission</h3>
+          <p>A nearby transmission line may offer a separate path, but proximity
+            does not prove capacity. It can require a project substation, switching,
+            protection, easements, and a formal system-impact study.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="sources" class="section sources">
+      <div class="section-heading">
+        <p class="eyebrow">Public data foundation</p>
+        <h2>Built from sources anyone can inspect</h2>
+      </div>
+      <div class="source-grid">
+        <article><h3>Land and planning</h3><p>Mendocino County parcels and zoning,
+          California Coastal Zone, Fort Bragg boundary, protected lands,
+          important farmland, wetlands, and CAL FIRE hazard zones.</p></article>
+        <article><h3>Terrain and cover</h3><p>USGS 3DEP elevation and NLCD 2021
+          land cover measure slope, connected open land, and conservative
+          vegetation screening in the Highway 1 viewshed.</p></article>
+        <article><h3>Electric grid</h3><p>PG&amp;E ICA line sections, feeder
+          characteristics and load profiles, plus California Energy Commission
+          transmission geometry.</p></article>
+        <article><h3>Sun and visibility</h3><p>NASA POWER solar climatology and
+          official Caltrans Highway 1 geometry support resource and scenic-exposure
+          screening.</p></article>
+      </div>
+      <p class="source-links"><a href="provenance.json">View retrieval provenance</a>
+        <span>·</span> <a href="downloads.html">Download generated results</a>
+        <span>·</span> <a href="https://github.com/jmacd/mendo-coast-solar">Read the source code</a></p>
+    </section>
+
+    <section class="section closing">
+      <p class="eyebrow">Continue the investigation</p>
+      <h2>See every candidate, assumption, and diagnostic.</h2>
+      <div class="actions">
+        <a class="button primary" href="candidate-map.html">Explore the ranked map</a>
+        <a class="button secondary" href="downloads.html">Download results</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Mendocino Coast Solar Siting Study · Open source and reproducible</p>
+    <p>This regional screen is not a permit, survey, biological assessment,
+      engineering design, or interconnection determination.</p>
+  </footer>
+</body>
+</html>

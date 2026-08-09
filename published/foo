@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A public-data study of community solar and storage sites on the Mendocino Coast.">
+  <title>Mendocino Coast Solar Site Analysis</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="wordmark" href="./">Mendocino Coast Solar</a>
+    <nav aria-label="Primary navigation">
+      <a href="#method">Method</a>
+      <a href="#grid">Grid</a>
+      <a href="#sources">Sources</a>
+      <a class="nav-cta" href="candidate-map.html">Explore the data</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <h1>Where could grid-scale solar work on the Mendocino Coast?</h1>
+        <p class="lede">
+          A solar developer approached Caspar Water Company interested in a
+          lease on its field near Highway 1. We learned that interconnection
+          capacity is a major obstacle for new solar developments. What does
+          that tell us about site suitability? We learned that Mendocino
+          Coastal ordinances do not permit grid-scale solar in residential
+          zoning. (*)
