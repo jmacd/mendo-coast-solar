@@ -180,7 +180,7 @@ def render(county: dict, transmission: dict, roads: dict, destination: Path) -> 
     svg = [
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {WIDTH} {HEIGHT}" role="img" aria-labelledby="title desc">',
         '<title id="title">Road map of Mendocino County and its high-voltage grid</title>',
-        '<desc id="desc">Mendocino County with Highways 1 and 101, towns, and mapped 60, 115, and 230 kilovolt transmission lines. The coastal 60 kilovolt network has relatively few connections to the larger inland grid.</desc>',
+        '<desc id="desc">Mendocino County with Highways 1 and 101, towns, and mapped 60 and 115 kilovolt transmission lines. The coastal 60 kilovolt network has relatively few connections to the larger inland grid.</desc>',
         """<defs>
           <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
             <feDropShadow dx="0" dy="5" stdDeviation="7" flood-opacity=".14"/>
@@ -256,14 +256,12 @@ def render(county: dict, transmission: dict, roads: dict, destination: Path) -> 
     svg.extend(
         [
             '<g transform="translate(568 48)" filter="url(#shadow)">',
-            '<rect width="258" height="150" rx="14" fill="#fffdf7" stroke="#cbd4ca"/>',
+            '<rect width="258" height="116" rx="14" fill="#fffdf7" stroke="#cbd4ca"/>',
             text(22, 34, "Transmission voltage", "legend-title"),
             '<path d="M24 64h55" stroke="#e09a2f" stroke-width="5" stroke-linecap="round"/>',
             text(94, 69, "60 kV", "legend-copy"),
             '<path d="M24 97h55" stroke="#c65b3f" stroke-width="6" stroke-linecap="round"/>',
             text(94, 102, "115 kV", "legend-copy"),
-            '<path d="M24 130h55" stroke="#843b62" stroke-width="7" stroke-linecap="round"/>',
-            text(94, 135, "230 kV", "legend-copy"),
             "</g>",
             "</svg>",
         ]

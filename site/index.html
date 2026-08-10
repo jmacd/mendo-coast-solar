@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="A reproducible public-data study of community solar and storage sites on the Mendocino Coast.">
-  <title>Mendocino Coast Solar Siting Study</title>
+  <meta name="description" content="A public-data study of community solar and storage sites on the Mendocino Coast.">
+  <title>Mendocino Coast Solar Site Analysis</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -12,26 +12,28 @@
     <a class="wordmark" href="./">Mendocino Coast Solar</a>
     <nav aria-label="Primary navigation">
       <a href="#method">Method</a>
-      <a href="#grid">The grid</a>
+      <a href="#grid">Grid</a>
       <a href="#sources">Sources</a>
-      <a class="nav-cta" href="candidate-map.html">Explore candidates</a>
+      <a class="nav-cta" href="candidate-map.html">Explore the data</a>
     </nav>
   </header>
 
   <main>
     <section class="hero">
       <div class="hero-copy">
-        <p class="eyebrow">An open, reproducible siting study</p>
-        <h1>Where could community solar work on the Mendocino Coast?</h1>
-        <p class="lede">The question started with one promising field in Caspar.
-          This study turns that local observation into a coast-wide search for
-          land where solar and battery storage could serve coastal communities.</p>
+        <h1>Where could grid-scale solar work on the Mendocino Coast?</h1>
+        <p class="lede">
+          A solar developer approached Caspar Water Company interested in a
+          lease on its field near Highway 1. We learned that interconnection
+          capacity is a major obstacle for new solar developments. What does
+          that tell us about site suitability? We learned that Mendocino
+          Coastal ordinances do not permit grid-scale solar in residential
+          zones<sup>*</sup>.</p>
         <div class="actions">
-          <a class="button primary" href="candidate-map.html">Open the candidate map</a>
-          <a class="button secondary" href="downloads.html">Download the data</a>
+          <a class="button primary" href="candidate-map.html">Open the map</a>
+          <a class="button secondary" href="downloads.html">View the data</a>
         </div>
-        <p class="caveat">Screening results, not approved projects or PG&amp;E
-          interconnection determinations.</p>
+        <p class="caveat"><sup>*</sup>Mendocino Co. Ordinance 3857 states otherwise.</p>
       </div>
       <div class="hero-art" aria-hidden="true">
         <div class="sun"></div>
@@ -44,32 +46,36 @@
     </section>
 
     <section class="snapshot" aria-label="Study snapshot">
+      <div><strong>9,820</strong><span>Coastal parcel APNs screened</span></div>
       <div><strong>6,112</strong><span>PG&amp;E distribution line sections analyzed</span></div>
-      <div><strong>182</strong><span>solar-storage candidates</span></div>
-      <div><strong>14</strong><span>PG&amp;E coastal feeders examined</span></div>
-      <div><strong>22</strong><span>candidates zoned RR or RMR</span></div>
+      <div><strong>14</strong><span>regional PG&amp;E feeders examined</span></div>
+      <div><strong>182</strong><span>solar-storage candidates identified</span></div>
     </section>
 
     <section class="section transmission-story">
       <div class="section-heading">
-        <p class="eyebrow">The first grid lesson</p>
-        <h2>A long coast has only a few connections to the wider grid</h2>
-        <p>Electricity is physical: it must travel over wires, and every wire
-          has a finite current limit. Generating power in one place and selling
-          it somewhere else depends on having enough capacity along the entire
-          path between them.</p>
+        <p class="eyebrow">At the edge of the grid</p>
+        <h2>If we want sustainable energy, we have to make it here</h2>
+        <p>
+          The electric grid carries energy over transmission lines
+          that separate major population centers. Our capacity to
+          transmit energy to and from the coast is limited by the size
+          of these lines.  To bring a new solar utility online
+          requires an interconnection agreement with PG&amp;E.  When
+          grid is capacity constrained, transmission across that section
+          is not permissible without upgrading the grid.
+        </p>
       </div>
       <img class="wide-graphic grid-map" src="transmission-map.svg"
         alt="Map showing the long Mendocino Coast transmission network and its few connections toward the wider inland grid.">
       <div class="finding-grid">
         <article>
-          <h3>Every wire has a limit</h3>
-          <p>Conductors and grid equipment can safely carry only a finite
-            electrical current. The weakest part of a route can constrain how
-            much additional power reaches the other end.</p>
+          <h3>Moving electricity is wasteful</h3>
+          <p>Transmitting electricity costs electricity. Moving
+            electricity over long distances is not sustainable.</p>
         </article>
         <article>
-          <h3>There are few paths inland</h3>
+          <h3>Only three transmission lines</h3>
           <p>The public map shows a sparse coastal transmission network with
             only a few links toward the larger inland grid. Existing customers
             and generators already share those paths.</p>
