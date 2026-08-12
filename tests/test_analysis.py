@@ -11,6 +11,7 @@ from solar_siting.analysis import (
     candidate_sites,
     highway_metrics,
     highway_viewshed_metrics,
+    nearest_pge_join,
     specific_yield_mwh_per_mw,
     terrain_line_visible,
 )
@@ -65,6 +66,36 @@ def test_candidate_sites_combine_adjacent_industrial_parcels():
     assert result.iloc[0]["parcel_count"] == 2
     assert result.iloc[0]["IMPV"] == 3000
     assert result.iloc[0].geometry.area / ACRE_M2 == pytest.approx(12, abs=0.001)
+
+
+def test_nearest_pge_join_does_not_prefer_distant_high_ica_section():
+    parcels = gpd.GeoDataFrame(
+        geometry=[box(0, 0, 10, 10)],
+        crs="EPSG:3310",
+    )
+    lines = gpd.GeoDataFrame(
+        {
+            "CSV_LineSection": ["nearest", "higher-ica"],
+            "GenericPVCapacity_kW": [186.0, 319.0],
+            "phase_cnt": [3, 3],
+        },
+        geometry=[
+            LineString([(20, 0), (20, 10)]),
+            LineString([(450, 0), (450, 10)]),
+        ],
+        crs=parcels.crs,
+    )
+
+    result = nearest_pge_join(
+        parcels,
+        lines,
+        ["CSV_LineSection", "GenericPVCapacity_kW", "phase_cnt"],
+        max_distance_m=1000,
+    )
+
+    assert result.iloc[0]["CSV_LineSection"] == "nearest"
+    assert result.iloc[0]["GenericPVCapacity_kW"] == 186
+    assert result.iloc[0]["pge_distance_m"] == pytest.approx(10)
 
 
 def test_highway_metrics_classify_east_west_and_crossing():

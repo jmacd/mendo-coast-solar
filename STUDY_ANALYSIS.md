@@ -107,9 +107,10 @@ is 5.5 acres per MW, used only to estimate physical nameplate potential.
 
 ### Distribution sections
 
-The model examines PG&E ICA line sections within 1 kilometer. Rather than
-blindly choosing the nearest line, it prefers a higher-capacity three-phase
-section within that search distance.
+The model assigns each site its nearest mapped PG&E ICA line section. It does
+not assume that a more distant section with higher published ICA is a feasible
+point of interconnection. The one-kilometer distance and three-phase
+requirements are then applied to that nearest section.
 
 It records:
 
@@ -178,9 +179,10 @@ new project's output. The public data used by this study does not provide:
 
 PG&E's ICA values cannot fill this gap. They describe changing conditions on
 individual 12 kV distribution sections. For example, the nearest mapped
-Caspar section reports 186 kW of generic-PV ICA and a selected higher-capacity
-section within the search radius reports 319 kW, both from the October 2025
-analysis. Neither number describes the adjacent 60 kV transmission line.
+Caspar section reports 186 kW of generic-PV ICA. Another section near the
+historic Caspar mill area reports 319 kW, but the model does not assign that
+more distant section to the Fern Creek site. Neither number describes the
+adjacent 60 kV transmission line.
 
 A developer proposing a transmission-level wholesale generator must identify
 a point of interconnection and enter the CAISO generator-interconnection
@@ -253,12 +255,12 @@ local coastal homes. It:
 The revised run processes 10,112 Coastal Zone parcel features, creates 1,331
 candidate sites after coarse constraints, and finds 182 sites with at least 10
 contiguous suitable acres, a three-phase section within 1 kilometer, and
-acceptable assessed improvement intensity. Thirteen of those also have at
+acceptable assessed improvement intensity. Two of those also have at
 least 500 kW of static generic-PV ICA.
 
 The highest-ranked sites now occur on the higher-demand Fort Bragg/Caspar
 feeders rather than exclusively around Elk. The former mill assemblage ranks
-first, and APN `1180901200` ranks tenth.
+first, and APN `1180901200` ranks eighth.
 
 The Highway 1 factor now performs terrain line-of-sight tests instead of using
 east or west location as a proxy. It:
@@ -289,7 +291,7 @@ layer). The vegetation-aware model estimates it is visible from approximately
 meters away and a 2.81-percent exposure index. It ranks 13th rather than first.
 APN `1180901200` has a 2.51-percent exposure index, approximately 0.6
 kilometers of visible highway, and a nearest visible view about 119 meters
-away; it ranks tenth.
+away; it ranks eighth.
 
 This remains a screening viewshed, not a project visual-impact study. The
 NLCD obstruction heights are categorical assumptions, not measured tree
@@ -319,8 +321,8 @@ The revised result is:
 | Reference battery | 4.00 MWh |
 | Reference annual generation | 1,546 MWh |
 | Reference average power | 176 kW |
-| Static generic-PV ICA | 260 kW |
-| Reference static export gap | 740 kW |
+| Static generic-PV ICA | 167 kW |
+| Reference static export gap | 833 kW |
 | Feeder residential customers | 2,730 |
 | Feeder peak load | 3.84 MW |
 | Highway viewshed exposure | 0.0% |
@@ -386,11 +388,11 @@ tests but fail only the 500 kW static ICA gate:
 | APN | Approximate location | Contiguous open/flat acres | Land potential | Nearby general-generation ICA |
 |---|---|---:|---:|---:|
 | `1180503000` | 39.36648, -123.81254 | 16.7 | 3.03 MW | 229 kW |
-| `1180901200` | 39.36347, -123.80577 | 25.8 | 4.69 MW | 229 kW |
-| `1180600900` | 39.36625, -123.80574 | 14.2 | 2.59 MW | 229 kW |
+| `1180901200` | 39.36347, -123.80577 | 25.8 | 4.69 MW | 128 kW |
+| `1180600900` | 39.36625, -123.80574 | 14.2 | 2.59 MW | 128 kW |
 | `1181405700` | 39.35477, -123.81060 | 10.7 | 1.94 MW | 229 kW |
 | `1181405800` | 39.35231, -123.81047 | 22.7 | 4.12 MW | 229 kW |
-| `1181504500` | 39.35194, -123.80571 | 18.7 | 3.40 MW | 229 kW |
+| `1181504500` | 39.35194, -123.80571 | 18.7 | 3.40 MW | 128 kW |
 
 These acreages are raster-screening estimates, not surveyed buildable areas.
 
@@ -403,17 +405,13 @@ This known parcel is a valuable model check:
 | Gross area | Approximately 30.2 acres |
 | Contiguous open/flat area | Approximately 25.8 acres |
 | Land-based PV potential | Approximately 4.69 MW |
-| Nearest selected 12 kV distribution section | Approximately 449 meters |
+| Nearest mapped 12 kV distribution section | Approximately 13 meters |
 | Distribution phases | Three |
-| General-generation ICA | 229 kW |
-| Generic-PV ICA | 319 kW |
+| General-generation ICA | 128 kW |
+| Generic-PV ICA | 186 kW |
 | ICA limiting criterion | Voltage |
 | Limiting period | April at 1 p.m. |
 | ICA analysis date observed | October 2025 |
-
-PG&E also publishes 742 kW for generation without operational flexibility for
-the queried section, but that field and the differences among ICA scenarios
-require utility interpretation before use in project sizing.
 
 The voltage constraint is plausible on a rural distribution branch. High solar
 output can cause local voltage rise even when the feeder as a whole has more
@@ -421,7 +419,7 @@ load than the project produces. Loads may be upstream or on other branches,
 line impedance matters, and existing or queued generators may consume
 available capacity.
 
-## Power, energy, and the 229 kW figure
+## Power, energy, and the 128 kW figure
 
 The most important correction from the study is that power and energy must not
 be conflated:
@@ -436,9 +434,9 @@ Nevertheless, the array can approach 1 MW around midday. The grid must be able
 to handle the instantaneous export unless a battery, controls, or curtailment
 prevents it.
 
-The 229 kW ICA number therefore does not necessarily prohibit 1 MW of panels.
+The 128 kW ICA number therefore does not necessarily prohibit 1 MW of panels.
 It indicates the published static general-generation export capability of the
-selected distribution section under PG&E's assumptions.
+nearest mapped distribution section under PG&E's assumptions.
 
 A simplified 1 MW solar-storage concept might:
 
@@ -448,10 +446,10 @@ A simplified 1 MW solar-storage concept might:
 4. Discharge during evening demand.
 5. Curtail solar if the battery is full and export is constrained.
 
-If export were fixed at 229 kW, five solar hours could export about 1.15 MWh
-directly. Approximately 3.85 MWh would remain for storage or curtailment.
-After losses, a battery might deliver roughly 3.4-3.5 MWh over another 15
-hours at 229 kW. This is an illustration, not a design; real performance
+If export were fixed at 128 kW, five solar hours could export about 0.64 MWh
+directly. Approximately 4.36 MWh would remain for storage or curtailment.
+After losses, a battery might deliver roughly 3.9 MWh over another 30 hours
+at 128 kW. This is an illustration, not a design; real performance
 requires hourly weather, load, equipment, reserve, degradation, and seasonal
 analysis.
 
@@ -620,11 +618,11 @@ screened land, a known local use case, three-phase distribution, and immediate
 The program successfully narrowed more than ten thousand Coastal Zone parcel
 features to a reviewable set and exposed why a naive ranking favors Elk. The
 storage-oriented revision now ranks 182 strategic sites and separately reports
-13 sites with at least 500 kW of static PV ICA.
+2 sites with at least 500 kW of static PV ICA.
 
 For the project now under consideration, APN `1180901200` should be treated as
 a strong strategic candidate for solar plus storage. A 1 MW array is not
-contradicted by the 229 kW figure if approved controls, storage, and curtailment
+contradicted by the 186 kW static-PV figure if approved controls, storage, and curtailment
 keep export within an acceptable envelope. The nearby 60 kV line may create a
 second, larger interconnection option. Both paths require formal engineering
 and utility study, but neither is represented fairly by the static-ICA subset

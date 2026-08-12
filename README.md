@@ -124,6 +124,19 @@ searches by APN, County situs address, town, zone, or feeder. The map needs
 internet access for Leaflet and aerial or street-map tiles; candidate geometry
 and attributes are embedded in the HTML.
 
+Generate the detailed Fort Bragg–Mendocino 12 kV map after running the analysis:
+
+```sh
+python tools/render_local_grid_map.py
+```
+
+The resulting `site/caspar-local-grid.svg` shows PG&E ICA sections on the shared
+Fort Bragg A 1102 feeder, the Holquist and Fern Creek sites, their nearest
+sections and mapped connection distances, and the Caspar branch geometry over
+an OpenStreetMap road basemap. Basemap tiles are downloaded once to
+`data/osm-tiles/` and cached for later renders. The possible field disconnect
+remains unverified.
+
 Useful output fields include:
 
 - `apn`, `FID`, `centroid_lat`, and `centroid_lon`
@@ -275,7 +288,7 @@ Static ICA describes an **uncontrolled distribution-export screen**, not the
 maximum amount of solar that can be installed on a parcel.
 For example, APN `1180901200` has approximately 25.8 contiguous open/flat acres
 and land capacity well above 1 MW, but its nearby 12 kV section publishes only
-229 kW of general-generation ICA and 319 kW of generic-PV capacity.
+128 kW of general-generation ICA and 186 kW of generic-PV capacity.
 
 A 1 MW array can still be a plausible concept if a battery and certified power
 control system keep instantaneous export within an approved static or

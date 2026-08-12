@@ -502,12 +502,11 @@ def _nearest_join(
     return joined[~joined.index.duplicated(keep="first")].reindex(parcels.index)
 
 
-def best_pge_join(
+def nearest_pge_join(
     parcels: gpd.GeoDataFrame,
     lines: gpd.GeoDataFrame,
     columns: list[str],
     max_distance_m: float,
-    required_phase_count: int,
 ) -> gpd.GeoDataFrame:
     index = lines.sindex
     rows = []
@@ -520,12 +519,9 @@ def best_pge_join(
         if len(matches):
             candidates = lines.iloc[matches][columns + ["geometry"]].copy()
             candidates["pge_distance_m"] = candidates.geometry.distance(geometry)
-            candidates["_phase_ok"] = (
-                candidates["phase_cnt"].fillna(0) >= required_phase_count
-            )
             candidates = candidates.sort_values(
-                ["_phase_ok", "GenericPVCapacity_kW", "pge_distance_m"],
-                ascending=[False, False, True],
+                ["pge_distance_m", "CSV_LineSection"],
+                ascending=[True, True],
                 na_position="last",
             )
             selected = candidates.iloc[0]
@@ -817,12 +813,11 @@ def analyze(
         "phase_cnt",
         "ICA_Analysis_Date",
     ]
-    pge_nearest = best_pge_join(
+    pge_nearest = nearest_pge_join(
         parcels,
         pge_ica,
         pge_columns,
         settings["max_distribution_distance_m"],
-        settings["required_phase_count"],
     )
     print("PG&E ICA join complete", flush=True)
     parcels["pge_distance_m"] = pge_nearest["pge_distance_m"]
