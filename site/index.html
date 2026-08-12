@@ -48,12 +48,7 @@
       </div>
     </section>
 
-    <section class="snapshot" aria-label="Study snapshot">
-      <div><strong>9,820</strong><span>Coastal parcel APNs screened</span></div>
-      <div><strong>6,112</strong><span>PG&amp;E distribution line sections analyzed</span></div>
-      <div><strong>14</strong><span>regional PG&amp;E feeders examined</span></div>
-      <div><strong>182</strong><span>solar-storage candidates identified</span></div>
-    </section>
+    <section class="snapshot" aria-hidden="true"></section>
 
     <section class="section transmission-story">
       <div class="transmission-intro">
@@ -122,24 +117,64 @@
       </div>
     </section>
 
-    <section class="story section">
-      <div class="section-heading">
-        <p class="eyebrow">Local Generation</p>
-        <h2></h2>
+    <div class="section-separator" aria-hidden="true"></div>
+
+    <section class="section transmission-story local-grid-story">
+      <div class="transmission-intro">
+        <div class="section-heading">
+          <p class="eyebrow">Local generation</p>
+          <h2>The neighborhood grid shapes what can connect</h2>
+          <p>
+            Between Hare Creek and Russian Gulch, PG&amp;E's published
+            Integration Capacity Analysis divides parts of the 12 kV
+            distribution grid into sections. Comparing those sections with
+            nearby candidate parcels shows both the opportunities and the
+            limits of the public data.
+          </p>
+        </div>
+        <div class="transmission-art" aria-hidden="true">
+          <div class="field-ridge"></div>
+          <span class="field-panel field-panel-one"></span>
+          <span class="field-panel field-panel-two"></span>
+          <span class="field-panel field-panel-three"></span>
+          <span class="field-panel field-panel-four"></span>
+          <span class="field-panel field-panel-five"></span>
+          <span class="field-panel field-panel-six"></span>
+        </div>
       </div>
-      <div class="story-grid">
-        <p class="pullquote">“We know a couple of possible sites because we live
-          nearby. How do we expand that knowledge across the whole coast?”</p>
-        <div class="prose">
-          <p>A useful coastal project needs more than a sunny parcel. It needs a
-            large, connected area of buildable land; access to three-phase
-            distribution; a community that can use the energy; storage for foggy
-            weather and evening demand; and a realistic path through environmental,
-            visual, and land-use constraints.</p>
-          <p>The model downloads public GIS and PG&amp;E planning data, applies the
-            same tests to every parcel in the Mendocino County Coastal Zone, and
-            publishes the assumptions and intermediate measures. Local knowledge
-            still matters: the ranking is a way to focus investigation, not replace it.</p>
+      <div class="transmission-layout">
+        <div class="local-grid-map">
+          <img class="grid-map" src="caspar-local-grid.svg"
+            alt="Map of color-coded Integration Capacity sections and
+            zoning-colored candidate parcels between Hare Creek and Russian
+            Gulch, with addresses connected to candidate boundaries.">
+        </div>
+        <div class="finding-grid">
+          <article>
+            <h3>Published sections are incomplete</h3>
+            <p>The colored lines are sections with published ICA geometry,
+              not a complete inventory of every local conductor. An uncolored
+              branch means its section-level capacity is unknown here, not
+              that its capacity is zero.</p>
+          </article>
+          <article>
+            <h3>Use the nearest section</h3>
+            <p>Each candidate is compared with the nearest mapped section.
+              The analysis does not substitute a more distant, higher-capacity
+              section across a branch point or transfer switch.</p>
+          </article>
+          <article>
+            <h3>Land use remains visible</h3>
+            <p>Candidate boundaries retain the zoning colors used in the data
+              explorer. Industrial, remote residential, and rural residential
+              sites can have very different permitting and community impacts.</p>
+          </article>
+          <article>
+            <h3>ICA is a planning screen</h3>
+            <p>Integration Capacity estimates additional instantaneous export
+              under modeled conditions. Neighboring section values are not
+              independent, additive, or reserved for any candidate project.</p>
+          </article>
         </div>
       </div>
     </section>

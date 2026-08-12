@@ -59,19 +59,20 @@ h1 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(3rem, 6vw,
 .coast { background: var(--green-dark); bottom: -10%; clip-path: polygon(0 25%, 25% 16%, 44% 35%, 61% 18%, 100% 36%, 100% 100%, 0 100%); height: 58%; position: absolute; width: 110%; }
 .coast-back { background: #6b8e70; bottom: 15%; left: -5%; opacity: .85; }
 .coast-front { left: -10%; }
-.panel { background: repeating-linear-gradient(90deg, transparent 0 20px, rgba(255,255,255,.3) 21px 22px), #244e63; border: 5px solid #d6ddd7; box-shadow: 0 12px 28px rgba(0,0,0,.24); height: 80px; position: absolute; transform: skewY(-7deg); width: 160px; z-index: 2; }
-.panel-one { bottom: calc(10% + 80px); left: 7%; }
-.panel-two { bottom: calc(10% + 80px); left: calc(50% - 80px); }
-.panel-three { bottom: calc(10% + 80px); right: 7%; }
-.panel-four { bottom: 10%; left: 7%; }
-.panel-five { bottom: 10%; left: calc(50% - 80px); }
-.panel-six { bottom: 10%; right: 7%; }
+.panel { background: repeating-linear-gradient(90deg, transparent 0 20px, rgba(255,255,255,.3) 21px 22px), #244e63; border: 5px solid #d6ddd7; box-shadow: 0 12px 28px rgba(0,0,0,.24); height: 88px; position: absolute; transform: skewY(-7deg); width: 176px; z-index: 2; }
+.panel-one { bottom: calc(10% + 106px); left: 5%; }
+.panel-two { bottom: calc(10% + 106px); left: calc(50% - 88px); }
+.panel-three { bottom: calc(10% + 106px); right: 5%; }
+.panel-four { bottom: 10%; left: 5%; }
+.panel-five { bottom: 10%; left: calc(50% - 88px); }
+.panel-six { bottom: 10%; right: 5%; }
 
 .snapshot {
   background: var(--green-dark);
   color: white;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
+  min-height: 9rem;
   padding: 2.25rem max(1.5rem, calc((100vw - 1180px) / 2));
 }
 .snapshot div { border-left: 1px solid rgba(255,255,255,.24); padding: 0 1.5rem; }
@@ -83,7 +84,7 @@ h1 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(3rem, 6vw,
 .section-heading { max-width: 760px; }
 .section-heading h2, .closing h2 { font-family: Georgia, serif; font-size: clamp(2.35rem, 4vw, 4.25rem); font-weight: 500; letter-spacing: -0.035em; margin: 0.2rem 0 1rem; }
 .section-heading > p:last-child { color: var(--muted); font-size: 1.08rem; }
-.story-grid { display: grid; gap: 6rem; grid-template-columns: .85fr 1.15fr; margin-top: 2rem; }
+.story-grid { display: grid; gap: 6rem; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 2rem; }
 .pullquote { color: var(--green); font-family: Georgia, serif; font-size: 1.8rem; line-height: 1.35; margin: 0; }
 .prose { color: var(--muted); font-size: 1.08rem; }
 
@@ -94,14 +95,18 @@ h1 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(3rem, 6vw,
 .transmission-intro .section-heading { max-width: none; padding: 7rem 3rem 0 max(1.5rem, calc((100vw - 1180px) / 2)); }
 .transmission-art { background: var(--green-dark); min-height: 100%; overflow: hidden; position: relative; }
 .field-ridge { background: #315f46; bottom: -10%; clip-path: polygon(0 22%, 24% 10%, 48% 27%, 70% 6%, 100% 20%, 100% 100%, 0 100%); height: 100%; left: -3%; position: absolute; width: 106%; }
-.field-panel { background: repeating-linear-gradient(90deg, transparent 0 20px, rgba(255,255,255,.3) 21px 22px), #244e63; border: 5px solid #d6ddd7; box-shadow: 0 12px 28px rgba(0,0,0,.24); height: 80px; position: absolute; transform: skewY(-7deg); width: 160px; z-index: 2; }
-.field-panel-one { bottom: 30%; left: 7%; }
-.field-panel-two { bottom: 30%; left: calc(50% - 80px); }
-.field-panel-three { bottom: 30%; right: 7%; }
-.field-panel-four { bottom: 10%; left: 7%; }
-.field-panel-five { bottom: 10%; left: calc(50% - 80px); }
-.field-panel-six { bottom: 10%; right: 7%; }
+.field-panel { background: repeating-linear-gradient(90deg, transparent 0 20px, rgba(255,255,255,.3) 21px 22px), #244e63; border: 5px solid #d6ddd7; box-shadow: 0 12px 28px rgba(0,0,0,.24); height: 88px; position: absolute; transform: skewY(-7deg); width: 176px; z-index: 2; }
+.field-panel-one { bottom: calc(10% + 106px); left: 5%; }
+.field-panel-two { bottom: calc(10% + 106px); left: calc(50% - 88px); }
+.field-panel-three { bottom: calc(10% + 106px); right: 5%; }
+.field-panel-four { bottom: 10%; left: 5%; }
+.field-panel-five { bottom: 10%; left: calc(50% - 88px); }
+.field-panel-six { bottom: 10%; right: 5%; }
+.section-separator { background: #315f46; min-height: 9rem; }
+.local-grid-story .transmission-art { background: #315f46; }
+.local-grid-story .field-ridge { background: #47775c; }
 .transmission-layout { align-items: start; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 3rem auto; max-width: 1132px; width: calc(100% - 3rem); }
+.local-grid-map, .local-grid-map .grid-map { width: 100%; }
 .transmission-story > .note { margin-left: auto; margin-right: auto; max-width: 1132px; width: calc(100% - 3rem); }
 .grid-map { display: block; filter: drop-shadow(0 12px 28px rgba(23,49,40,.11)); width: 100%; }
 .finding-grid { display: grid; gap: 1.25rem; grid-template-columns: repeat(3, 1fr); }
@@ -116,7 +121,7 @@ h1 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(3rem, 6vw,
 .step { color: var(--gold); font-family: Georgia, serif; font-size: 1.5rem; }
 
 .score-section { background: var(--cream); border-radius: 24px; max-width: 1230px; padding-left: 2.5rem; padding-right: 2.5rem; }
-.score-layout { align-items: start; display: grid; gap: 5rem; grid-template-columns: 1.1fr .9fr; margin-top: 3rem; }
+.score-layout { align-items: start; display: grid; gap: 5rem; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 3rem; }
 .bar-row { align-items: center; display: grid; gap: 1rem; grid-template-columns: 150px 1fr 44px; margin: 1.25rem 0; }
 .bar-row > span { font-size: 0.9rem; font-weight: 700; }
 .bar { background: #e5e9e1; border-radius: 999px; height: 18px; overflow: hidden; }
@@ -159,7 +164,7 @@ h1 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(3rem, 6vw,
   .section { padding: 4.5rem 1.25rem; }
   .score-section { border-radius: 0; padding-left: 1.25rem; padding-right: 1.25rem; }
   .bar-row { grid-template-columns: 110px 1fr 40px; }
-  .transmission-layout { grid-template-columns: 1fr; }
+  .transmission-layout, .local-grid-story .transmission-layout { grid-template-columns: 1fr; }
   .grid-map { margin: 0 auto; max-height: 28rem; width: auto; }
   .transmission-layout .finding-grid { padding-left: 0; }
   .site-footer { display: block; }
