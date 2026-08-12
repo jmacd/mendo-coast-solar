@@ -101,11 +101,11 @@ h1 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(3rem, 6vw,
 .field-panel-four { bottom: 10%; left: 7%; }
 .field-panel-five { bottom: 10%; left: calc(50% - 80px); }
 .field-panel-six { bottom: 10%; right: 7%; }
-.transmission-layout { align-items: start; display: grid; gap: 3rem; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); margin: 3rem auto; max-width: 1132px; width: calc(100% - 3rem); }
+.transmission-layout { align-items: start; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 3rem auto; max-width: 1132px; width: calc(100% - 3rem); }
 .transmission-story > .note { margin-left: auto; margin-right: auto; max-width: 1132px; width: calc(100% - 3rem); }
-.grid-map { display: block; filter: drop-shadow(0 12px 28px rgba(23,49,40,.11)); max-height: 34rem; width: 100%; }
+.grid-map { display: block; filter: drop-shadow(0 12px 28px rgba(23,49,40,.11)); width: 100%; }
 .finding-grid { display: grid; gap: 1.25rem; grid-template-columns: repeat(3, 1fr); }
-.transmission-layout .finding-grid { grid-template-columns: 1fr; }
+.transmission-layout .finding-grid { grid-template-columns: 1fr; padding-left: 1.25rem; }
 .finding-grid article { border-top: 3px solid var(--gold); padding: 1rem 1.25rem 0; }
 .finding-grid h3 { font-size: 1.05rem; margin: 0 0 .6rem; }
 .finding-grid p { color: var(--muted); font-size: .92rem; }
@@ -150,7 +150,6 @@ h1 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(3rem, 6vw,
   .transmission-intro { gap: 2rem; grid-template-columns: 1fr; }
   .transmission-intro .section-heading { padding: 4.5rem 1.5rem 0; }
   .transmission-art { min-height: 280px; }
-  .transmission-layout { gap: 2rem; }
 }
 
 @media (max-width: 560px) {
@@ -162,5 +161,6 @@ h1 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(3rem, 6vw,
   .bar-row { grid-template-columns: 110px 1fr 40px; }
   .transmission-layout { grid-template-columns: 1fr; }
   .grid-map { margin: 0 auto; max-height: 28rem; width: auto; }
+  .transmission-layout .finding-grid { padding-left: 0; }
   .site-footer { display: block; }
 }

@@ -10,7 +10,7 @@ from urllib.parse import urlencode
 from urllib.request import urlopen
 
 
-WIDTH = 860
+WIDTH = 700
 HEIGHT = 850
 LEFT = 32
 TOP = 28
@@ -188,8 +188,8 @@ def render(county: dict, transmission: dict, roads: dict, destination: Path) -> 
           <style>
             .town{font:650 13px system-ui,sans-serif;fill:#173128;paint-order:stroke;stroke:#f7f4ea;stroke-width:4px;stroke-linejoin:round}
             .road-label{font:750 12px system-ui,sans-serif;fill:#6d6658;paint-order:stroke;stroke:#f7f4ea;stroke-width:4px}
-            .legend-title{font:800 15px system-ui,sans-serif;fill:#173128}
-            .legend-copy{font:13px system-ui,sans-serif;fill:#52675f}
+            .legend-title{font:800 22px system-ui,sans-serif;fill:#173128}
+            .legend-copy{font:18px system-ui,sans-serif;fill:#52675f}
           </style>
           <clipPath id="county-clip">""",
     ]
@@ -255,13 +255,13 @@ def render(county: dict, transmission: dict, roads: dict, destination: Path) -> 
 
     svg.extend(
         [
-            '<g transform="translate(568 48)" filter="url(#shadow)">',
-            '<rect width="258" height="116" rx="14" fill="#fffdf7" stroke="#cbd4ca"/>',
-            text(22, 34, "Transmission voltage", "legend-title"),
-            '<path d="M24 64h55" stroke="#e09a2f" stroke-width="5" stroke-linecap="round"/>',
-            text(94, 69, "60 kV", "legend-copy"),
-            '<path d="M24 97h55" stroke="#c65b3f" stroke-width="6" stroke-linecap="round"/>',
-            text(94, 102, "115 kV", "legend-copy"),
+            '<g transform="translate(395 62)" filter="url(#shadow)">',
+            '<rect width="260" height="152" rx="14" fill="#fffdf7" stroke="#cbd4ca"/>',
+            text(20, 38, "Transmission voltage", "legend-title"),
+            '<path d="M24 78h64" stroke="#e09a2f" stroke-width="6" stroke-linecap="round"/>',
+            text(108, 84, "60 kV", "legend-copy"),
+            '<path d="M24 119h64" stroke="#c65b3f" stroke-width="7" stroke-linecap="round"/>',
+            text(108, 125, "115 kV", "legend-copy"),
             "</g>",
             "</svg>",
         ]
