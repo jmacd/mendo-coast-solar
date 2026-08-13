@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 560" role="img" aria-labelledby="title desc">
+  <title id="title">How solar and storage connect to the Mendocino Coast grid</title>
+  <desc id="desc">Solar charges a battery and serves local demand through a controlled 12 kilovolt distribution connection. A substation connects the feeder to a 60 kilovolt transmission line, which is a separate possible project connection.</desc>
+  <defs>
+    <marker id="greenArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0 0 10 5 0 10z" fill="#2b7853"/>
+    </marker>
+    <marker id="blueArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0 0 10 5 0 10z" fill="#397b91"/>
+    </marker>
+    <style>
+      .label{font:700 18px system-ui,sans-serif;fill:#173128}.small{font:14px system-ui,sans-serif;fill:#52675f}
+      .tiny{font:12px system-ui,sans-serif;fill:#52675f}.wire{fill:none;stroke:#397b91;stroke-width:7}
+      .flow{fill:none;stroke:#2b7853;stroke-width:5;marker-end:url(#greenArrow)}
+      .trans{fill:none;stroke:#173128;stroke-width:10}.dash{stroke-dasharray:10 8}
+      .box{fill:#fffdf7;stroke:#9fb3a7;stroke-width:2}.callout{fill:#dcebe0;stroke:#72a184;stroke-width:2}
+    </style>
+  </defs>
+
+  <rect x="20" y="20" width="1140" height="520" rx="20" fill="#edf3ef"/>
+  <text class="label" x="55" y="62">A coastal solar-storage project has more than one electrical constraint</text>
+
+  <g transform="translate(65 150)">
+    <circle cx="68" cy="-47" r="30" fill="#e6a93b"/>
+    <g transform="skewY(-7)">
+      <rect x="0" y="0" width="136" height="80" rx="4" fill="#244e63" stroke="#fff" stroke-width="5"/>
+      <path d="M45 0v80M90 0v80M0 40h136" stroke="#9ab7c1" stroke-width="2"/>
+    </g>
+    <text class="label" x="3" y="120">Solar array</text>
+    <text class="small" x="-8" y="143">Power varies with sun and fog</text>
+  </g>
+
+  <path class="flow" d="M220 190h100"/>
+
+  <g transform="translate(320 130)">
+    <rect class="box" width="160" height="130" rx="12"/>
+    <rect x="35" y="28" width="90" height="58" rx="7" fill="#e6a93b"/>
+    <rect x="125" y="45" width="8" height="24" fill="#173128"/>
+    <path d="M76 38 58 62h17l-9 18 35-31H82l10-11z" fill="#fffdf7"/>
+    <text class="label" x="46" y="113">Battery</text>
+    <text class="small" x="4" y="158">Shifts daytime energy</text>
+    <text class="small" x="11" y="180">to evening demand</text>
+  </g>
+
+  <path class="flow" d="M480 195h98"/>
+
+  <g transform="translate(578 118)">
+    <rect class="callout" width="184" height="154" rx="12"/>
+    <path d="M48 37h88v67H48z" fill="#fffdf7" stroke="#245c43" stroke-width="3"/>
+    <circle cx="70" cy="70" r="8" fill="#245c43"/><circle cx="114" cy="70" r="8" fill="#245c43"/>
+    <path d="M70 70h44M92 70v22" stroke="#245c43" stroke-width="4"/>
+    <text class="label" x="24" y="130">Power controls</text>
+    <text class="small" x="22" y="178">Cap instantaneous export</text>
+    <text class="small" x="21" y="200">to the approved limit</text>
+  </g>
+
+  <path class="flow" d="M762 195h90"/>
+  <path class="wire" d="M852 195h230"/>
+  <text class="label" x="855" y="165">12 kV distribution feeder</text>
+  <text class="small" x="855" y="226">Shared neighborhood circuit</text>
+  <text class="small" x="855" y="247">Static ICA describes a line section</text>
+
+  <g transform="translate(930 285)">
+    <path d="M0 68 55 22l55 46v78H0z" fill="#fffdf7" stroke="#789184" stroke-width="3"/>
+    <rect x="42" y="100" width="27" height="46" fill="#789184"/>
+    <text class="label" x="-5" y="176">Local homes</text>
+    <text class="small" x="-30" y="199">Evening demand can exceed</text>
+    <text class="small" x="-3" y="220">midday demand</text>
+  </g>
+  <path class="wire" d="M985 195v106" marker-end="url(#blueArrow)"/>
+
+  <g transform="translate(700 360)">
+    <rect class="box" width="165" height="118" rx="12"/>
+    <path d="M30 85h105M45 85l20-55 20 55 20-55 20 55" fill="none" stroke="#173128" stroke-width="4"/>
+    <text class="label" x="34" y="110">Substation</text>
+  </g>
+  <path class="wire" d="M910 195v88q0 25-25 25H782v52" marker-end="url(#blueArrow)"/>
+
+  <path class="trans" d="M70 500h1040"/>
+  <text class="label" x="70" y="480">60 kV coastal transmission</text>
+  <text class="small" x="905" y="525">Higher-voltage regional network</text>
+  <path class="trans" d="M782 478v22"/>
+
+  <path class="flow dash" d="M670 272v150q0 35-35 35H250v43"/>
+  <text class="label" x="286" y="410">Separate transmission option</text>
+  <text class="small" x="286" y="433">Requires a project substation and PG&amp;E study</text>
+</svg>

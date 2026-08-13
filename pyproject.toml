@@ -1,0 +1,32 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mendocino-solar-siting"
+version = "0.1.0"
+description = "Reproducible parcel-scale solar screening for the Mendocino Coast"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "geopandas>=1.0",
+  "numpy>=2.0",
+  "pyproj>=3.7",
+  "rasterio>=1.4",
+  "requests>=2.32",
+  "scipy>=1.14",
+  "shapely>=2.0",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8.0"]
+
+[project.scripts]
+solar-siting = "solar_siting.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/solar_siting"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+

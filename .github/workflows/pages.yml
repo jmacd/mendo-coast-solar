@@ -1,0 +1,81 @@
+name: Analyze and publish
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      refresh:
+        description: Redownload every source dataset
+        type: boolean
+        default: true
+  schedule:
+    - cron: "23 10 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e ".[test]"
+      - run: pytest -q
+
+  analyze-and-deploy:
+    if: github.event_name != 'pull_request'
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: github-pages
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e .
+      - uses: actions/cache@v4
+        with:
+          path: data
+          key: solar-data-${{ hashFiles('config/mendocino.toml') }}
+      - name: Run analysis
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "schedule" || "${{ inputs.refresh }}" == "true" ]]; then
+            solar-siting run --refresh
+          else
+            solar-siting run
+          fi
+          python tools/render_local_grid_map.py
+      - name: Assemble Pages site
+        shell: bash
+        run: |
+          mkdir _site
+          cp site/* _site/
+          cp site/.nojekyll _site/
+          cp output/candidate-map.html _site/candidate-map.html
+          cp output/*.csv output/*.geojson output/report.md _site/
+          cp data/provenance.json _site/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

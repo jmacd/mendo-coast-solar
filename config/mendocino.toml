@@ -1,0 +1,215 @@
+[area]
+name = "Mendocino County coastal-grid corridor"
+# County extent, used to limit remote spatial queries. Parcel eligibility is
+# controlled separately by the configurable study_scope below.
+bbox = [-124.15, 38.74, -123.45, 40.05]
+analysis_crs = "EPSG:3310"
+
+[study_scope]
+# Follow every mapped distribution feeder that intersects the configured
+# coastal anchor, then retain full parcels within interconnection range.
+# Other counties can substitute different source keys without changing code.
+anchor_source = "coastal_zone"
+anchor_label = "Coastal Zone"
+distribution_source = "pge_feeders"
+max_grid_distance_m = 1000.0
+
+[sources.coastal_zone]
+kind = "arcgis-vector"
+url = "https://services9.arcgis.com/wwVnNW92ZHUIr0V0/arcgis/rest/services/Coastal_Zone_Polygon/FeatureServer/0"
+fields = ["FID"]
+filename = "coastal-zone.geojson"
+required = true
+
+[sources.fort_bragg]
+kind = "arcgis-vector"
+url = "https://services3.arcgis.com/uknczv4rpevve42E/arcgis/rest/services/California_Cities_and_Identifiers_Blue_Version_view/FeatureServer/2"
+where = "CDT_NAME_SHORT = 'Fort Bragg' AND OFFSHORE IS NULL"
+fields = ["OBJECTID", "CDT_NAME_SHORT", "CDTFA_COUNTY"]
+filename = "fort-bragg-city-limits.geojson"
+required = true
+
+[sources.parcels]
+kind = "arcgis-vector"
+url = "https://services2.arcgis.com/iq8zYa0SRsvIFFKz/arcgis/rest/services/Mendocino_County_Parcels/FeatureServer/0"
+fields = [
+  "FID",
+  "APNFULL",
+  "SITUS_ADD",
+  "SITUS_CTY",
+  "ACRES",
+  "IMPV",
+  "LCP_CODE",
+  "GEN_PLAN",
+  "BASEZONE",
+  "STATUS",
+]
+cache_fields = ["SITUS_ADD", "SITUS_CTY"]
+filename = "parcels.geojson"
+required = true
+
+[sources.wetlands]
+kind = "arcgis-vector"
+url = "https://fwspublicservices.wim.usgs.gov/wetlandsmapservice/rest/services/Wetlands/MapServer/0"
+fields = ["Wetlands.OBJECTID", "Wetlands.ATTRIBUTE", "Wetlands.WETLAND_TYPE"]
+filename = "wetlands.geojson"
+required = true
+
+[sources.protected_lands]
+kind = "arcgis-vector"
+url = "https://services2.arcgis.com/Uq9r85Potqm3MfRV/ArcGIS/rest/services/CPAD_Holdings_wm/FeatureServer/0"
+fields = ["FID", "UNIT_NAME", "AGNCY_NAME", "AGNCY_LEV", "ACCESS_TYP"]
+filename = "protected-lands.geojson"
+required = true
+
+[sources.farmland]
+kind = "arcgis-vector"
+url = "https://gis.conservation.ca.gov/server/rest/services/DLRP/CaliforniaImportantFarmland_mostrecent/MapServer/0"
+fields = ["OBJECTID", "county_nam", "polygon_ty"]
+filename = "farmland.geojson"
+required = true
+
+[sources.fire_hazard]
+kind = "arcgis-vector"
+url = "https://services1.arcgis.com/jUJYIo9tSA7EHvfZ/ArcGIS/rest/services/FHSZSRA_23_3/FeatureServer/0"
+fields = ["OBJECTID", "FHSZ_Description"]
+filename = "fire-hazard.geojson"
+required = true
+
+[sources.transmission]
+kind = "arcgis-vector"
+url = "https://services3.arcgis.com/bWPjFyq029ChCGur/arcgis/rest/services/Transmission_Line/FeatureServer/2"
+fields = ["OBJECTID", "Name", "kV", "Owner", "Status", "Type"]
+filename = "transmission.geojson"
+required = true
+
+[sources.highway_1]
+kind = "arcgis-vector"
+url = "https://caltrans-gis.dot.ca.gov/arcgis/rest/services/CHhighway/SHN_Lines/FeatureServer/0"
+where = "Route = 1 AND County = 'MEN'"
+fields = ["OBJECTID", "Route", "County", "AlignCode"]
+filename = "highway-1.geojson"
+required = true
+
+[sources.pge_ica]
+kind = "arcgis-vector"
+url = "https://services2.arcgis.com/mJaJSax0KPHoCNB6/ArcGIS/rest/services/DRPComplianceRelProd/FeatureServer/3"
+fields = [
+  "OBJECTID",
+  "FeederId",
+  "FeederName",
+  "CSV_LineSection",
+  "GenCapacity_kW",
+  "GenericPVCapacity_kW",
+  "voltage_kv",
+  "phase_cnt",
+  "ICA_Analysis_Date",
+]
+filename = "pge-ica.geojson"
+required = true
+
+[sources.pge_feeders]
+kind = "arcgis-vector"
+url = "https://services2.arcgis.com/mJaJSax0KPHoCNB6/ArcGIS/rest/services/DRPComplianceRelProd/FeatureServer/2"
+fields = [
+  "OBJECTID",
+  "FeederID",
+  "Feeder_Name",
+  "Substation",
+  "Nominal_Voltage",
+  "ResCust",
+  "ComCust",
+  "IndCust",
+  "AgrCust",
+  "OthCust",
+  "Existing_DG",
+  "Queued_DG",
+  "Total_DG",
+]
+filename = "pge-feeders.geojson"
+required = true
+
+[sources.pge_load_profiles]
+kind = "arcgis-related-table"
+url = "https://services2.arcgis.com/mJaJSax0KPHoCNB6/ArcGIS/rest/services/DRPComplianceRelProd/FeatureServer/23"
+fields = ["OBJECTID", "FeederID", "MonthHour", "Low", "High", "Last_Update_On_Map"]
+filename = "pge-load-profiles.json"
+ids_from = "pge-feeders.geojson"
+source_id_field = "FeederID"
+table_id_field = "FeederID"
+required = true
+
+[sources.elevation]
+kind = "arcgis-raster"
+url = "https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer"
+filename = "elevation-30m.tif"
+pixel_size_m = 30
+output_crs = "EPSG:3310"
+required = true
+
+[sources.land_cover]
+kind = "wcs-raster"
+url = "https://www.mrlc.gov/geoserver/mrlc_display/wcs"
+layer = "mrlc_display:NLCD_2021_Land_Cover_L48"
+filename = "nlcd-2021-land-cover-30m.tif"
+pixel_size_m = 30
+output_crs = "EPSG:3857"
+required = true
+
+[sources.solar]
+kind = "nasa-power"
+url = "https://power.larc.nasa.gov/api/temporal/climatology/regional"
+filename = "solar-climatology.json"
+parameter = "ALLSKY_SFC_SW_DWN"
+required = true
+
+[analysis]
+min_parcel_acres = 10.0
+max_slope_degrees = 10.0
+min_contiguous_acres = 10.0
+wetland_buffer_m = 30.0
+acres_per_mw = 5.5
+system_loss_fraction = 0.14
+grid_distance_scale_m = 1000.0
+max_distribution_distance_m = 1000.0
+min_generation_capacity_kw = 500.0
+required_phase_count = 3
+max_improvement_value_per_acre = 10000.0
+open_land_cover_classes = [31, 52, 71, 81]
+industrial_land_cover_classes = [21, 22, 31, 52, 71, 81]
+reference_solar_project_mw = 1.0
+reference_storage_hours = 4.0
+near_transmission_distance_m = 100.0
+residential_base_zones = ["RR", "RMR"]
+excluded_base_zones = ["OS"]
+highway_observer_spacing_m = 100.0
+highway_viewshed_max_distance_m = 5000.0
+highway_viewshed_distance_scale_m = 1000.0
+highway_viewshed_high_exposure = 0.04
+highway_viewshed_target_samples = 9
+highway_observer_height_m = 1.7
+solar_target_height_m = 3.0
+highway_viewshed_endpoint_clearance_m = 30.0
+
+[analysis.highway_viewshed_obstruction_heights_m]
+# Conservative visual-obstruction proxies for NLCD 2021 classes.
+# 41 deciduous forest, 42 evergreen forest, 43 mixed forest,
+# 90 woody wetlands.
+41 = 15.0
+42 = 20.0
+43 = 18.0
+90 = 12.0
+
+[analysis.weights]
+contiguous_land = 0.10
+flat_fraction = 0.05
+open_land_cover = 0.03
+undeveloped = 0.10
+industrial_reuse = 0.07
+distribution_proximity = 0.08
+residential_demand = 0.16
+evening_peak_demand = 0.16
+solar_resource = 0.07
+grid_hosting_capacity = 0.02
+transmission_proximity = 0.01
+low_highway_visibility = 0.15
