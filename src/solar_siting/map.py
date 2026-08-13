@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import html as html_module
 import json
 from pathlib import Path
 
@@ -43,6 +44,7 @@ def write_candidate_map(sites: gpd.GeoDataFrame, destination: Path) -> None:
         .replace("", "Unclassified")
     )
     payload = json.loads(web_sites.to_json(drop_id=True))
+    anchor_label = html_module.escape(str(sites["scope_anchor_label"].iloc[0]))
     data = json.dumps(payload, separators=(",", ":")).replace("<", "\\u003c")
     colors = json.dumps(ZONE_COLORS, separators=(",", ":"))
     labels = json.dumps(ZONE_LABELS, separators=(",", ":"))
@@ -200,6 +202,7 @@ def write_candidate_map(sites: gpd.GeoDataFrame, destination: Path) -> None:
           <th><button data-sort="rank" data-type="number">Rank</button></th>
           <th><button data-sort="site_apns">APN / address</button></th>
           <th><button data-sort="map_zone">Zone</button></th>
+          <th><button data-sort="scope_anchor_fraction" data-type="number">__ANCHOR_LABEL__ %</button></th>
           <th><button data-sort="score" data-type="number">Score</button></th>
           <th><button data-sort="contiguous_acres" data-type="number">Suitable ac</button></th>
           <th><button data-sort="gross_acres" data-type="number">Gross ac</button></th>
@@ -282,6 +285,8 @@ function popup(properties) {
     <div>${esc(address(properties))}</div>
     <table>
       <tr><th>Zone</th><td>${esc(properties.map_zone)} - ${esc(labels[properties.map_zone] || "")}</td></tr>
+      <tr><th>__ANCHOR_LABEL__</th><td>${number(Number(properties.scope_anchor_fraction) * 100, 0)}% of parcel</td></tr>
+      <tr><th>Grid-scope distance</th><td>${number(properties.scope_grid_distance_m, 0)} m</td></tr>
       <tr><th>Score</th><td>${number(properties.score, 3)}</td></tr>
       <tr><th>Gross / suitable</th><td>${number(properties.gross_acres)} / ${number(properties.contiguous_acres)} acres</td></tr>
       <tr><th>Wetland exclusion</th><td>${number(properties.wetland_exclusion_acres)} acres</td></tr>
@@ -327,6 +332,7 @@ for (const item of items) {
     <td><span class="apn">${esc(properties.site_apns)}</span>
       <span class="address">${esc(address(properties))}</span></td>
     <td><span class="zone">${esc(zone)}</span></td>
+    <td class="number">${number(Number(properties.scope_anchor_fraction) * 100, 0)}%</td>
     <td class="number">${number(properties.score, 3)}</td>
     <td class="number">${number(properties.contiguous_acres)}</td>
     <td class="number">${number(properties.gross_acres)}</td>
@@ -442,5 +448,6 @@ if (items.length) selectItem(items[0], false, false);
         template.replace("__DATA__", data)
         .replace("__COLORS__", colors)
         .replace("__LABELS__", labels)
+        .replace("__ANCHOR_LABEL__", anchor_label)
     )
     destination.write_text(html)

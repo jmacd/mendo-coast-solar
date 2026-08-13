@@ -478,6 +478,32 @@ def candidate_sites(
     return gpd.GeoDataFrame(rows, geometry="geometry", crs=parcels.crs)
 
 
+def grid_accessible_parcels(
+    parcels: gpd.GeoDataFrame,
+    anchor: gpd.GeoDataFrame,
+    distribution_grid: gpd.GeoDataFrame,
+    max_distance_m: float,
+) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
+    anchor_geometry = valid_union(anchor.geometry)
+    anchor_grid = distribution_grid[
+        distribution_grid.geometry.intersects(anchor_geometry)
+    ].copy()
+    if anchor_grid.empty:
+        raise ValueError("No distribution grid features intersect the scope anchor")
+
+    matches = gpd.sjoin_nearest(
+        parcels[["geometry"]],
+        anchor_grid[["geometry"]],
+        how="inner",
+        max_distance=max_distance_m,
+        distance_col="scope_grid_distance_m",
+    )
+    distances = matches.groupby(level=0)["scope_grid_distance_m"].min()
+    selected = parcels.loc[distances.index].copy()
+    selected["scope_grid_distance_m"] = distances.reindex(selected.index)
+    return selected, anchor_grid
+
+
 def _nearest_join(
     parcels: gpd.GeoDataFrame,
     targets: gpd.GeoDataFrame,
@@ -611,7 +637,13 @@ def analyze(
     settings = config["analysis"]
     sources = config["sources"]
 
-    coast = gpd.read_file(data_dir / sources["coastal_zone"]["filename"]).to_crs(crs)
+    scope_settings = config["study_scope"]
+    scope_anchor = gpd.read_file(
+        data_dir / sources[scope_settings["anchor_source"]]["filename"]
+    ).to_crs(crs)
+    scope_grid = gpd.read_file(
+        data_dir / sources[scope_settings["distribution_source"]]["filename"]
+    ).to_crs(crs)
     fort_bragg = gpd.read_file(data_dir / sources["fort_bragg"]["filename"]).to_crs(crs)
     parcels = gpd.read_file(data_dir / sources["parcels"]["filename"]).to_crs(crs)
     parcels.geometry = parcels.geometry.make_valid()
@@ -634,16 +666,27 @@ def analyze(
         [box(*config["area"]["bbox"])],
         crs="EPSG:4326",
     ).to_crs(crs).iloc[0]
-    coast_geometry = valid_union(coast.geometry).intersection(bounds_geometry)
-    parcels = parcels[parcels.geometry.intersects(coast_geometry)].copy()
-    parcels.geometry = parcels.geometry.intersection(coast_geometry)
-    parcels = parcels[~parcels.geometry.is_empty]
-    print(f"coastal parcels: {len(parcels)}", flush=True)
+    scope_anchor = scope_anchor[scope_anchor.geometry.intersects(bounds_geometry)].copy()
+    scope_anchor.geometry = scope_anchor.geometry.intersection(bounds_geometry)
+    scope_grid = scope_grid[scope_grid.geometry.intersects(bounds_geometry)].copy()
+    parcels = parcels[parcels.geometry.intersects(bounds_geometry)].copy()
+    parcels, anchor_grid = grid_accessible_parcels(
+        parcels,
+        scope_anchor,
+        scope_grid,
+        scope_settings["max_grid_distance_m"],
+    )
+    parcel_bounds = box(*parcels.total_bounds)
+    print(
+        f"grid-accessible parcels: {len(parcels)} from "
+        f"{len(anchor_grid)} anchor-reaching grid features",
+        flush=True,
+    )
 
-    wetlands = wetlands[wetlands.geometry.intersects(coast_geometry)]
-    protected = protected[protected.geometry.intersects(coast_geometry)]
-    farmland = farmland[farmland.geometry.intersects(coast_geometry)]
-    fort_bragg = fort_bragg[fort_bragg.geometry.intersects(coast_geometry)]
+    wetlands = wetlands[wetlands.geometry.intersects(parcel_bounds)]
+    protected = protected[protected.geometry.intersects(parcel_bounds)]
+    farmland = farmland[farmland.geometry.intersects(parcel_bounds)]
+    fort_bragg = fort_bragg[fort_bragg.geometry.intersects(parcel_bounds)]
     print(
         "constraint features: "
         f"{len(wetlands)} wetlands, {len(protected)} protected, "
@@ -681,6 +724,19 @@ def analyze(
     constraints = constraints[~constraints.geometry.is_empty]
 
     parcels = candidate_sites(parcels, settings["min_parcel_acres"])
+    scope_nearest = _nearest_join(
+        parcels,
+        anchor_grid,
+        [],
+        "scope_grid_distance_m",
+    )
+    parcels["scope_grid_distance_m"] = scope_nearest["scope_grid_distance_m"]
+    anchor_geometry = valid_union(scope_anchor.geometry)
+    parcels["scope_anchor_fraction"] = (
+        parcels.geometry.intersection(anchor_geometry).area
+        / parcels.geometry.area.replace(0, np.nan)
+    )
+    parcels["scope_anchor_label"] = scope_settings["anchor_label"]
     parcels["gross_acres"] = parcels.geometry.area / ACRE_M2
     parcels["wetland_exclusion_acres"] = constraint_overlap_acres(
         parcels,
@@ -1075,6 +1131,9 @@ def analyze(
         "centroid_lon",
         "centroid_lat",
         "score",
+        "scope_grid_distance_m",
+        "scope_anchor_fraction",
+        "scope_anchor_label",
         "gross_acres",
         "screenable_acres",
         "excluded_acres",

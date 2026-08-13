@@ -1,8 +1,8 @@
 # Mendocino Coast solar siting study
 
-This package downloads public GIS and PG&E planning data, screens parcels in
-the Mendocino County Coastal Zone, and produces maps and tables for reviewing
-community-scale solar sites.
+This package downloads public GIS and PG&E planning data, screens parcels
+within reach of distribution feeders that serve the Mendocino coast, and
+produces maps and tables for reviewing community-scale solar sites.
 
 The study introduction, published explorer, and downloadable results are available
 at <https://jmacd.github.io/mendo-coast-solar/>. GitHub Actions tests the model,
@@ -130,17 +130,17 @@ Generate the detailed Fort Bragg–Mendocino 12 kV map after running the analysi
 python tools/render_local_grid_map.py
 ```
 
-The resulting `site/caspar-local-grid.svg` shows PG&E ICA sections on the shared
-Fort Bragg A 1102 feeder, the Holquist and Fern Creek sites, their nearest
-sections and mapped connection distances, and the Caspar branch geometry over
-an OpenStreetMap road basemap. Basemap tiles are downloaded once to
-`data/osm-tiles/` and cached for later renders. The possible field disconnect
-remains unverified.
+The resulting `site/caspar-local-grid.svg` overlays color-coded PG&E ICA
+sections and zoning-colored candidate parcels on an OpenStreetMap basemap.
+Candidate addresses and static-PV ICA values are connected to parcel
+boundaries. Basemap tiles are downloaded once to `data/osm-tiles/` and cached
+for later renders.
 
 Useful output fields include:
 
 - `apn`, `FID`, `centroid_lat`, and `centroid_lon`
 - `BASEZONE` and `residential_zoning` (`RR` and `RMR` only)
+- `scope_grid_distance_m`, `scope_anchor_fraction`, and `scope_anchor_label`
 - `gross_acres`, `screenable_acres`, and `contiguous_acres`
 - `flat_fraction`, `open_fraction`, and `mean_slope_deg`
 - `pge_distance_m`, line section, voltage, phase count, and published ICA
@@ -228,10 +228,16 @@ services, WCS rasters, and NASA POWER JSON.
 
 ## Current screening method
 
-The study boundary is the Coastal Zone clipped to the configured Mendocino
-coast bounding box. Parcels are processed as follows:
+The study scope is configured in `[study_scope]`. For Mendocino, the program
+selects distribution-feeder features that intersect the Coastal Zone and then
+retains full parcel geometries within one kilometer of those coastal-reaching
+feeders. This captures accessible inland parcels without treating the Coastal
+Zone as an electrical boundary. Other counties can substitute different
+anchor and distribution source keys in configuration. Parcels are processed
+as follows:
 
-1. Clip parcels to the study boundary.
+1. Select complete parcels within the configured distance of distribution
+   feeders that reach the study anchor.
 2. Remove wetlands with a 30-meter planning buffer.
 3. Remove CPAD protected lands.
 4. Remove Prime, Statewide Importance, and Unique farmland.

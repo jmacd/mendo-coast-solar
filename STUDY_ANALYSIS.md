@@ -7,7 +7,7 @@ support a community-scale solar field, and similar sites may exist elsewhere
 along the Mendocino Coast. The goal was to replace accidental discovery with a
 repeatable public-data method that could:
 
-- Search the entire Mendocino County Coastal Zone.
+- Search parcels within reach of grid feeders serving the Mendocino coast.
 - Find at least 10 contiguous usable acres.
 - Prefer undeveloped or lightly developed land.
 - Account for terrain, land cover, environmental constraints, and electrical
@@ -43,6 +43,8 @@ validation changed the energy concept in several important ways:
 7. APN `1180901200` lies immediately beside a mapped operational PG&E 60 kV
    line, creating a separate potential transmission-interconnection pathway
    that the first model does not evaluate.
+8. Restricting parcels to the Coastal Zone omitted inland sites served by the
+   same local 12 kV grid, including a strong candidate near County Road 409.
 
 The resulting conclusion is not simply "find the highest-scoring solar
 parcel." The proper next question is:
@@ -57,7 +59,8 @@ The study uses public sources declared in `config/mendocino.toml`:
 
 | Subject | Source and use |
 |---|---|
-| Study boundary | California Coastal Commission Coastal Zone |
+| Study anchor | California Coastal Commission Coastal Zone |
+| Parcel scope | Full parcels within 1 kilometer of distribution feeders that intersect the study anchor |
 | Parcels | Mendocino County parcels, APNs, acreage, improvements, zoning, and LCP fields |
 | Wetlands | USFWS National Wetlands Inventory |
 | Protected land | California Protected Areas Database |
@@ -81,8 +84,9 @@ Web outputs are converted to WGS84.
 
 ## Land analysis
 
-The program starts with County parcel geometry inside the Coastal Zone and
-configured Mendocino coast bounds. It:
+The program selects complete County parcels within one kilometer of mapped
+distribution feeders that intersect the Coastal Zone. The Coastal Zone is an
+anchor for identifying coast-serving feeders, not a parcel cutoff. It then:
 
 - Repairs invalid parcel and constraint geometry.
 - Removes NWI wetlands with a configurable 30-meter planning buffer.
@@ -252,15 +256,16 @@ local coastal homes. It:
 - Excludes County Open Space (`OS`) zoning.
 - Rewards low terrain visibility from Highway 1.
 
-The revised run processes 10,112 Coastal Zone parcel features, creates 1,331
-candidate sites after coarse constraints, and finds 182 sites with at least 10
+The grid-corridor run starts with 15,927 grid-accessible parcel features,
+creates 2,367 candidate sites after coarse constraints, and finds 206 sites with at least 10
 contiguous suitable acres, a three-phase section within 1 kilometer, and
-acceptable assessed improvement intensity. Two of those also have at
+acceptable assessed improvement intensity. Four of those also have at
 least 500 kW of static generic-PV ICA.
 
 The highest-ranked sites now occur on the higher-demand Fort Bragg/Caspar
 feeders rather than exclusively around Elk. The former mill assemblage ranks
-first, and APN `1180901200` ranks eighth.
+first, the Road 409/Prairie Way candidate ranks second, and APN `1180901200`
+ranks eighteenth.
 
 The Highway 1 factor now performs terrain line-of-sight tests instead of using
 east or west location as a proxy. It:
@@ -288,10 +293,10 @@ This correction directly tests the locally identified scenic parcel. The APN
 is `1180503000` (not `1180500300`, which is absent from the downloaded County
 layer). The vegetation-aware model estimates it is visible from approximately
 0.9 kilometers of sampled highway, with the nearest visible view about 30
-meters away and a 2.81-percent exposure index. It ranks 13th rather than first.
+meters away and a 2.81-percent exposure index. It ranks 23rd rather than first.
 APN `1180901200` has a 2.51-percent exposure index, approximately 0.6
 kilometers of visible highway, and a nearest visible view about 119 meters
-away; it ranks eighth.
+away; it ranks eighteenth.
 
 This remains a screening viewshed, not a project visual-impact study. The
 NLCD obstruction heights are categorical assumptions, not measured tree
@@ -311,7 +316,7 @@ The revised result is:
 
 | Measure | Result |
 |---|---:|
-| Solar-storage rank | 1 of 182 |
+| Solar-storage rank | 1 of 206 |
 | Gross GIS area | 35.97 acres |
 | Wetland planning exclusion | 14.38 acres |
 | Screenable area after all vector exclusions | 21.58 acres |
@@ -345,7 +350,7 @@ remediation remain due-diligence issues rather than hidden score adjustments.
 
 ## Zoning composition
 
-The primary ranking contains 182 sites. Open Space zoning is excluded. `RL` is
+The primary ranking contains 206 sites. Open Space zoning is excluded. `RL` is
 Rangeland and is not counted as residential. Only `RR` (Rural Residential) and
 `RMR` (Remote Residential) are classified as residential in this summary.
 
@@ -357,19 +362,19 @@ land, wetland, demand, storage, Highway 1, and interconnection attributes.
 
 | Base zone | Meaning | Sites | Share |
 |---|---|---:|---:|
-| `RL` | Rangeland | 107 | 58.8% |
-| `AG` | Agricultural | 38 | 20.9% |
-| `RMR` | Remote Residential | 13 | 7.1% |
-| `RR` | Rural Residential | 9 | 4.9% |
-| `FL` | Forest Lands | 5 | 2.7% |
-| Unclassified | Blank County base-zone value | 5 | 2.7% |
-| `TP` | Timberland Production | 3 | 1.6% |
+| `RL` | Rangeland | 125 | 60.7% |
+| `AG` | Agricultural | 39 | 18.9% |
+| `RMR` | Remote Residential | 13 | 6.3% |
+| `RR` | Rural Residential | 10 | 4.9% |
+| `FL` | Forest Lands | 6 | 2.9% |
+| Unclassified | Blank County base-zone value | 5 | 2.4% |
+| `TP` | Timberland Production | 5 | 2.4% |
+| `PF` | Public Facilities | 2 | 1.0% |
 | `I` | Industrial | 1 | 0.5% |
-| `PF` | Public Facilities | 1 | 0.5% |
 
-Therefore, **22 of 182 candidates (12.1 percent)** are residentially zoned:
-13 RMR and 9 RR. They represent approximately 763 gross acres, 404 contiguous
-suitable acres, and 73.4 MW of theoretical land-based PV potential.
+Therefore, **23 of 206 candidates (11.2 percent)** are residentially zoned:
+13 RMR and 10 RR. They represent approximately 784 gross acres, 419 contiguous
+suitable acres, and 76.2 MW of theoretical land-based PV potential.
 
 Residential zoning is concentrated near the top because the storage-oriented
 score rewards feeder residential customers and evening demand: 5 of the top
@@ -381,6 +386,16 @@ sites in a separate category rather than allowing local-demand scoring to
 dominate land-use compatibility.
 
 ## Caspar-area findings
+
+Expanding the scope beyond the Coastal Zone revealed APN `1185001100` at
+14000 Prairie Way near County Road 409. Only about 32.5 percent of its parcel
+geometry lies inside the Coastal Zone, so the previous boundary clip omitted
+most of the site. The revised screen estimates 31.6 contiguous suitable acres
+on 43.2 gross acres. Its nearest mapped section intersects the parcel and
+publishes 186 kW of generic-PV ICA, the same static-PV value assigned to Fern
+Creek. It ranks second overall and warrants direct comparison with Fern Creek,
+subject to confirming Public Facilities zoning, ownership, existing uses,
+access, environmental constraints, and interconnection feasibility.
 
 Several Caspar parcels pass the land, development, proximity, and three-phase
 tests but fail only the 500 kW static ICA gate:
@@ -615,10 +630,10 @@ screened land, a known local use case, three-phase distribution, and immediate
 
 ## Present conclusion
 
-The program successfully narrowed more than ten thousand Coastal Zone parcel
-features to a reviewable set and exposed why a naive ranking favors Elk. The
-storage-oriented revision now ranks 182 strategic sites and separately reports
-2 sites with at least 500 kW of static PV ICA.
+The program narrowed 15,927 grid-accessible parcel features to a reviewable
+set. The storage-oriented revision now ranks 206 strategic sites, including 19
+wholly outside the Coastal Zone, and separately reports 4 sites with at least
+500 kW of static PV ICA.
 
 For the project now under consideration, APN `1180901200` should be treated as
 a strong strategic candidate for solar plus storage. A 1 MW array is not

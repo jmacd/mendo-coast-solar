@@ -9,6 +9,7 @@ from solar_siting.analysis import (
     ACRE_M2,
     _normalize,
     candidate_sites,
+    grid_accessible_parcels,
     highway_metrics,
     highway_viewshed_metrics,
     nearest_pge_join,
@@ -96,6 +97,42 @@ def test_nearest_pge_join_does_not_prefer_distant_high_ica_section():
     assert result.iloc[0]["CSV_LineSection"] == "nearest"
     assert result.iloc[0]["GenericPVCapacity_kW"] == 186
     assert result.iloc[0]["pge_distance_m"] == pytest.approx(10)
+
+
+def test_grid_accessible_parcels_follow_only_grid_that_reaches_anchor():
+    parcels = gpd.GeoDataFrame(
+        {"name": ["coastal", "inland", "too-far", "unrelated"]},
+        geometry=[
+            box(0, 0, 10, 10),
+            box(190, 0, 200, 10),
+            box(300, 0, 310, 10),
+            box(190, 190, 200, 200),
+        ],
+        crs="EPSG:3310",
+    )
+    anchor = gpd.GeoDataFrame(
+        geometry=[box(-10, -10, 20, 20)],
+        crs=parcels.crs,
+    )
+    grid = gpd.GeoDataFrame(
+        {"feeder": ["coastal-reaching", "inland-only"]},
+        geometry=[
+            LineString([(5, 5), (205, 5)]),
+            LineString([(195, 195), (250, 195)]),
+        ],
+        crs=parcels.crs,
+    )
+
+    selected, selected_grid = grid_accessible_parcels(
+        parcels,
+        anchor,
+        grid,
+        max_distance_m=20,
+    )
+
+    assert selected["name"].tolist() == ["coastal", "inland"]
+    assert selected_grid["feeder"].tolist() == ["coastal-reaching"]
+    np.testing.assert_allclose(selected["scope_grid_distance_m"], [0, 0])
 
 
 def test_highway_metrics_classify_east_west_and_crossing():

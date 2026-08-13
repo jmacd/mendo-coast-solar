@@ -62,6 +62,7 @@ jobs:
           else
             solar-siting run
           fi
+          python tools/render_local_grid_map.py
       - name: Assemble Pages site
         shell: bash
         run: |

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 260" role="img" aria-labelledby="title desc">
   <title id="title">Solar siting analysis pipeline</title>
-  <desc id="desc">Public data is filtered through jurisdiction and environmental screens, analyzed for terrain and grid access, then ranked into 182 candidates.</desc>
+  <desc id="desc">Public data is filtered through jurisdiction and environmental screens, analyzed for terrain and grid access, then ranked into 206 candidates.</desc>
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M0 0 10 5 0 10z" fill="#789184"/>
@@ -18,10 +18,10 @@
   <path class="line" d="M925 130h55"/>
   <g transform="translate(10 45)">
     <rect class="box" width="210" height="170" rx="15"/>
-    <text class="num" x="22" y="45">10,112</text>
-    <text class="head" x="22" y="77">Coastal parcels</text>
-    <text class="copy" x="22" y="106">County parcels clipped</text>
-    <text class="copy" x="22" y="128">to the Coastal Zone</text>
+    <text class="num" x="22" y="45">15,927</text>
+    <text class="head" x="22" y="77">Grid-access parcels</text>
+    <text class="copy" x="22" y="106">Full parcels within 1 km</text>
+    <text class="copy" x="22" y="128">of coast-serving feeders</text>
   </g>
   <g transform="translate(275 45)">
     <rect class="box" width="180" height="170" rx="15"/>
@@ -46,7 +46,7 @@
   </g>
   <g transform="translate(980 45)">
     <rect class="final" width="190" height="170" rx="15"/>
-    <text class="num" x="22" y="45">182</text>
+    <text class="num" x="22" y="45">206</text>
     <text class="head finalText" x="22" y="77">Ranked sites</text>
     <text class="copy finalText" x="22" y="106">Comparable land, demand,</text>
     <text class="copy finalText" x="22" y="128">grid, sun and scenic scores</text>

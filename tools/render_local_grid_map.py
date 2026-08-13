@@ -14,11 +14,11 @@ from shapely.geometry import box
 
 
 WIDTH = 600
-HEIGHT = 680
+HEIGHT = 720
 MAP_LEFT = 20
 MAP_TOP = 20
 MAP_WIDTH = 560
-MAP_HEIGHT = 640
+MAP_HEIGHT = 680
 
 BBOX_WGS84 = box(-123.855, 39.325, -123.78, 39.415)
 OSM_ZOOM = 12
@@ -104,6 +104,17 @@ def capacity_color(value: object) -> str:
     return "#15583b"
 
 
+def western_hull_anchor(
+    projection: Projection,
+    geometry: object,
+) -> tuple[float, float]:
+    coordinates = shapely.get_coordinates(geometry.convex_hull.boundary)
+    points = [projection.point(x, y) for x, y in coordinates]
+    target_x = min(x for x, _ in points)
+    western_ys = [y for x, y in points if x <= target_x + 0.5]
+    return target_x, sum(western_ys) / len(western_ys)
+
+
 def world_pixel(longitude: float, latitude: float, zoom: int) -> tuple[float, float]:
     scale = 256 * (2**zoom)
     x = (longitude + 180) / 360 * scale
@@ -180,10 +191,10 @@ def render(data_dir: Path, results_dir: Path, destination: Path) -> None:
             <feDropShadow dx="0" dy="3" stdDeviation="4" flood-opacity=".14"/>
           </filter>
           <clipPath id="map-clip">
-            <rect width="600" height="680"/>
+            <rect width="600" height="720"/>
           </clipPath>
         </defs>""",
-        '<rect width="600" height="680" fill="#e9eee8"/>',
+        '<rect width="600" height="720" fill="#e9eee8"/>',
         '<g clip-path="url(#map-clip)" opacity=".82">',
     ]
     svg.extend(osm_tiles(data_dir, projection))
@@ -226,26 +237,34 @@ def render(data_dir: Path, results_dir: Path, destination: Path) -> None:
             f"<title>{apns}: {xml_text(zone)}</title></path>"
         )
 
+    anchored_candidates = []
+    for _, site in local_candidates.iterrows():
+        visible_geometry = site.geometry.intersection(bounds)
+        if visible_geometry.is_empty:
+            continue
+        target_x, target_y = western_hull_anchor(projection, visible_geometry)
+        anchored_candidates.append((target_y, target_x, site))
+    anchored_candidates.sort(key=lambda candidate: candidate[0])
+    route_x = min(candidate[1] for candidate in anchored_candidates) - 10
+
     address_legend = [
         '<g filter="url(#shadow)">',
-        '<rect x="30" y="394" width="210" height="246" rx="12" '
+        '<rect x="30" y="460" width="210" height="244" rx="12" '
         'fill="#fffdf7" fill-opacity=".94" stroke="#cbd4ca"/>',
         "</g>",
-        svg_text(48, 422, "Candidate addresses", "legend-title"),
+        svg_text(48, 488, "Candidate addresses", "legend-title"),
     ]
-    for index, (_, site) in enumerate(local_candidates.iterrows()):
-        y = 447 + index * 21
+    for index, (target_y, target_x, site) in enumerate(anchored_candidates):
+        y = 514 + index * 17
         address = str(site["SITUS_ADD"]).strip().title()
+        if address.upper() in {"", "NONE", "N/A", "NULL"}:
+            address = f"APN {site['site_apns']}"
         capacity = int(round(float(site["pge_GenericPVCapacity_kW"])))
         address = f"{address} ({capacity} kW)"
-        min_lon, min_lat, max_lon, max_lat = site.geometry.bounds
-        left, bottom = projection.point(min_lon, min_lat)
-        right, top = projection.point(max_lon, max_lat)
-        target_x = min(left, right)
-        target_y = min(max(y, min(top, bottom)), max(top, bottom))
         address_legend.extend(
             [
                 f'<path d="M225,{y - 4:.1f} '
+                f'L{route_x:.1f},{target_y:.1f} '
                 f'L{target_x:.1f},{target_y:.1f}" fill="none" '
                 'stroke="#202522" stroke-width="1"/>',
                 svg_text(48, y, address, "address-copy"),
@@ -267,7 +286,7 @@ def render(data_dir: Path, results_dir: Path, destination: Path) -> None:
             svg_text(108, 181, "≥300", "legend-copy"),
             "</g>",
             '<g filter="url(#shadow)">',
-            '<rect x="30" y="226" width="210" height="150" rx="12" '
+            '<rect x="30" y="226" width="210" height="216" rx="12" '
             'fill="#fffdf7" fill-opacity=".94" stroke="#cbd4ca"/>',
             svg_text(48, 254, "Zoning", "legend-title"),
             f'<rect x="50" y="277" width="42" height="14" fill="{ZONE_COLORS["I"]}"/>',
@@ -276,9 +295,13 @@ def render(data_dir: Path, results_dir: Path, destination: Path) -> None:
             svg_text(108, 322, "Remote residential", "legend-copy"),
             f'<rect x="50" y="343" width="42" height="14" fill="{ZONE_COLORS["RR"]}"/>',
             svg_text(108, 355, "Rural residential", "legend-copy"),
+            f'<rect x="50" y="376" width="42" height="14" fill="{ZONE_COLORS["RL"]}"/>',
+            svg_text(108, 388, "Rangeland", "legend-copy"),
+            f'<rect x="50" y="409" width="42" height="14" fill="{ZONE_COLORS["PF"]}"/>',
+            svg_text(108, 421, "Public facilities", "legend-copy"),
             "</g>",
             *address_legend,
-            svg_text(400, 654, "© OpenStreetMap contributors", "note"),
+            svg_text(400, 710, "© OpenStreetMap contributors", "note"),
             "</svg>",
         ]
     )

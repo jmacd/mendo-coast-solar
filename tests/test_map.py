@@ -12,6 +12,9 @@ def test_candidate_map_embeds_sites_and_zoning(tmp_path):
             "BASEZONE": ["RR"],
             "GEN_PLAN": ["RR10"],
             "site_type": ["greenfield"],
+            "scope_anchor_label": ["Coastal Zone"],
+            "scope_anchor_fraction": [0.75],
+            "scope_grid_distance_m": [20],
             "score": [0.8],
             "gross_acres": [30.0],
             "contiguous_acres": [25.0],
@@ -44,6 +47,8 @@ def test_candidate_map_embeds_sites_and_zoning(tmp_path):
     assert 'id="candidate-rows"' in content
     assert "selectItem(item" in content
     assert 'data-sort="score"' in content
+    assert 'data-sort="scope_anchor_fraction"' in content
+    assert "Coastal Zone" in content
     assert '"highway_1_viewshed_exposure":0.042' in content
     assert "Nearest visible view" in content
     assert 'href="downloads.html"' in content

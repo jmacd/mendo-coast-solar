@@ -1,9 +1,18 @@
 [area]
-name = "Mendocino County Coastal Zone"
-# County extent, used only to limit remote spatial queries. The Coastal
-# Commission polygon is the authoritative analysis mask.
+name = "Mendocino County coastal-grid corridor"
+# County extent, used to limit remote spatial queries. Parcel eligibility is
+# controlled separately by the configurable study_scope below.
 bbox = [-124.15, 38.74, -123.45, 40.05]
 analysis_crs = "EPSG:3310"
+
+[study_scope]
+# Follow every mapped distribution feeder that intersects the configured
+# coastal anchor, then retain full parcels within interconnection range.
+# Other counties can substitute different source keys without changing code.
+anchor_source = "coastal_zone"
+anchor_label = "Coastal Zone"
+distribution_source = "pge_feeders"
+max_grid_distance_m = 1000.0
 
 [sources.coastal_zone]
 kind = "arcgis-vector"
