@@ -78,10 +78,10 @@
       overflow: auto;
       padding: 0 16px 12px;
     }
+    .candidate-item { border-bottom: 1px solid #e2e6df; }
     .candidate {
       background: transparent;
       border: 0;
-      border-bottom: 1px solid #e2e6df;
       color: var(--ink);
       cursor: pointer;
       display: grid;
@@ -92,7 +92,10 @@
       text-align: left;
       width: 100%;
     }
-    .candidate:hover, .candidate:focus-visible { background: #edf3ed; outline: none; }
+    .candidate:hover, .candidate:focus-visible, .candidate.active {
+      background: #edf3ed;
+      outline: none;
+    }
     .rank {
       align-items: center;
       border: 2px solid var(--zone);
@@ -107,6 +110,17 @@
     }
     .address { font-size: 10px; font-weight: 750; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .details { color: var(--muted); font-size: 9px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .candidate-detail {
+      background: #f2f5ef;
+      display: grid;
+      font-size: 9px;
+      gap: 3px 8px;
+      grid-template-columns: auto minmax(0, 1fr);
+      margin: 0 0 8px 31px;
+      padding: 7px 8px;
+    }
+    .candidate-detail span { color: var(--muted); }
+    .candidate-detail b { font-weight: 650; overflow-wrap: anywhere; }
     .sidebar-foot {
       background: var(--cream);
       border-top: 1px solid var(--line);
@@ -130,10 +144,6 @@
       z-index: 5;
     }
     #status[hidden] { display: none; }
-    .maplibregl-popup-content { color: var(--ink); font: 11px/1.4 system-ui, sans-serif; max-width: 250px; }
-    .maplibregl-popup-content strong { font-size: 12px; }
-    .popup-grid { display: grid; gap: 2px 8px; grid-template-columns: auto 1fr; margin-top: 6px; }
-    .popup-grid span:nth-child(odd) { color: var(--muted); }
     @media (max-width: 620px) {
       #app { grid-template-columns: minmax(190px, 43%) minmax(0, 1fr); }
       #status { left: calc(43% + 8px); }
@@ -203,12 +213,14 @@
     const visibleCount = document.querySelector("#visible-count");
     let candidates = [];
     let displayed = [];
+    let visibleCandidates = [];
+    let activeApn = null;
 
     const map = new maplibregl.Map({
       container: "map",
       style: "https://tiles.openfreemap.org/styles/liberty",
-      center: [-123.79, 39.42],
-      zoom: 9.3,
+      bounds: [[-123.855, 39.325], [-123.78, 39.415]],
+      fitBoundsOptions: { padding: 16 },
       maxPitch: 0,
       attributionControl: true
     });
@@ -277,43 +289,47 @@
       const zone = clean(properties.BASEZONE) || "Unclassified";
       return zoneColors[zone] || zoneColors.Unclassified;
     }
-    function popupHtml(properties, localRank = null) {
-      const zone = clean(properties.BASEZONE) || "Unclassified";
-      const heading = localRank
-        ? `Local #${localRank} &middot; county #${esc(properties.rank)}`
-        : `County #${esc(properties.rank)}`;
-      return `<strong>${heading}: ${esc(address(properties))}</strong>
-        <div class="popup-grid">
-          <span>APN</span><b>${esc(properties.site_apns)}</b>
-          <span>Jurisdiction</span><b>${esc(properties.planning_jurisdiction)}</b>
-          <span>Zoning</span><b>${esc(zoneLabels[zone] || zone)}</b>
-          <span>Suitable land</span><b>${Number(properties.contiguous_acres).toFixed(1)} acres</b>
-          <span>Generic-PV ICA</span><b>${formatIca(properties.pge_GenericPVCapacity_kW)}</b>
-          <span>Nearest section</span><b>${Number(properties.pge_distance_m).toFixed(0)} m</b>
-        </div>`;
+    function candidateId(feature) {
+      return String(feature.properties.site_apns);
     }
-    function updateVisibleCandidates() {
-      if (!candidates.length) return;
-      const bounds = map.getBounds();
-      const visible = candidates
-        .filter(feature => intersectsView(feature, bounds))
-        .sort((left, right) => Number(right.properties.score) - Number(left.properties.score));
-      const best = visible.slice(0, MAX_VISIBLE);
+    function candidateDetailHtml(properties) {
+      const zone = clean(properties.BASEZONE) || "Unclassified";
+      return `<div class="candidate-detail">
+        <span>APN</span><b>${esc(properties.site_apns)}</b>
+        <span>Jurisdiction</span><b>${esc(properties.planning_jurisdiction)}</b>
+        <span>Zoning</span><b>${esc(zoneLabels[zone] || zone)}</b>
+        <span>Suitable land</span><b>${Number(properties.contiguous_acres).toFixed(1)} acres</b>
+        <span>Generic generation ICA</span><b>${formatIca(properties.pge_GenCapacity_kW)}</b>
+        <span>Generic PV ICA</span><b>${formatIca(properties.pge_GenericPVCapacity_kW)}</b>
+        <span>Nearest section</span><b>${Number(properties.pge_distance_m).toFixed(0)} m</b>
+      </div>`;
+    }
+    function renderCandidateList() {
+      const best = visibleCandidates.slice(0, MAX_VISIBLE);
+      const activeIndex = visibleCandidates.findIndex(
+        feature => candidateId(feature) === activeApn
+      );
+      if (activeIndex >= MAX_VISIBLE) best[MAX_VISIBLE - 1] = visibleCandidates[activeIndex];
       displayed = best
-        .map((feature, index) => ({
+        .map(feature => ({
           feature,
-          localRank: index + 1,
+          localRank: visibleCandidates.indexOf(feature) + 1,
           anchor: westernAnchor(feature)
         }))
         .sort((left, right) => left.anchor.point.y - right.anchor.point.y);
-      visibleCount.textContent = `${best.length} of ${visible.length}`;
+      visibleCount.textContent = `${best.length} of ${visibleCandidates.length}`;
       list.replaceChildren();
+      let activeRow = null;
       for (const item of displayed) {
         const properties = item.feature.properties;
         const zone = clean(properties.BASEZONE) || "Unclassified";
+        const row = document.createElement("li");
+        row.className = "candidate-item";
         const button = document.createElement("button");
-        button.className = "candidate";
+        const isActive = candidateId(item.feature) === activeApn;
+        button.className = `candidate${isActive ? " active" : ""}`;
         button.type = "button";
+        button.setAttribute("aria-expanded", String(isActive));
         button.style.setProperty("--zone", candidateColor(properties));
         button.innerHTML = `<span class="rank">${item.localRank}</span>
           <span class="address">${esc(address(properties))}</span>
@@ -321,19 +337,41 @@
           ${esc(zoneLabels[zone] || zone)} &middot;
           ${formatIca(properties.pge_GenericPVCapacity_kW)} ICA</span>`;
         button.addEventListener("click", () => {
+          if (activeApn === candidateId(item.feature)) {
+            activeApn = null;
+            renderCandidateList();
+            return;
+          }
+          activeApn = candidateId(item.feature);
+          renderCandidateList();
           const extent = item.feature._bounds;
           map.fitBounds([[extent[0], extent[1]], [extent[2], extent[3]]], {
             maxZoom: 15,
             padding: 70
           });
-          new maplibregl.Popup()
-            .setLngLat(item.anchor.coordinate)
-            .setHTML(popupHtml(properties, item.localRank))
-            .addTo(map);
         });
-        list.append(button);
+        row.append(button);
+        if (isActive) {
+          row.insertAdjacentHTML("beforeend", candidateDetailHtml(properties));
+          activeRow = row;
+        }
+        list.append(row);
       }
-      requestAnimationFrame(drawLeaders);
+      requestAnimationFrame(() => {
+        activeRow?.scrollIntoView({ block: "nearest" });
+        drawLeaders();
+      });
+    }
+    function updateVisibleCandidates() {
+      if (!candidates.length) return;
+      const bounds = map.getBounds();
+      visibleCandidates = candidates
+        .filter(feature => intersectsView(feature, bounds))
+        .sort((left, right) => Number(right.properties.score) - Number(left.properties.score));
+      if (!visibleCandidates.some(feature => candidateId(feature) === activeApn)) {
+        activeApn = null;
+      }
+      renderCandidateList();
     }
     function drawLeaders() {
       const appRect = app.getBoundingClientRect();
@@ -343,7 +381,7 @@
       if (!displayed.length) return;
       const routeX = mapRect.left - appRect.left + 12;
       [...list.children].forEach((row, index) => {
-        const rowRect = row.getBoundingClientRect();
+        const rowRect = row.querySelector(".candidate").getBoundingClientRect();
         const anchor = westernAnchor(displayed[index].feature).point;
         const startX = rowRect.right - appRect.left;
         const startY = rowRect.top + rowRect.height / 2 - appRect.top;
@@ -413,15 +451,12 @@
         paint: { "line-color": zoneExpression, "line-width": 2.5 }
       });
       map.on("click", "candidate-fill", event => {
-        const feature = event.features[0];
-        const visibleItem = displayed.find(
-          item => String(item.feature.properties.site_apns)
-            === String(feature.properties.site_apns)
+        const selected = candidates.find(
+          feature => candidateId(feature) === candidateId(event.features[0])
         );
-        new maplibregl.Popup()
-          .setLngLat(event.lngLat)
-          .setHTML(popupHtml(feature.properties, visibleItem?.localRank))
-          .addTo(map);
+        if (!selected) return;
+        activeApn = candidateId(selected);
+        renderCandidateList();
       });
       map.on("mouseenter", "candidate-fill", () => { map.getCanvas().style.cursor = "pointer"; });
       map.on("mouseleave", "candidate-fill", () => { map.getCanvas().style.cursor = ""; });
