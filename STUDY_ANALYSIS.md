@@ -45,6 +45,9 @@ validation changed the energy concept in several important ways:
    that the first model does not evaluate.
 8. Restricting parcels to the Coastal Zone omitted inland sites served by the
    same local 12 kV grid, including a strong candidate near County Road 409.
+9. Local map re-ranking made a county-wide municipal exclusion unnecessary.
+   Fort Bragg parcels are now retained and labeled with their separate planning
+   jurisdiction.
 
 The resulting conclusion is not simply "find the highest-scoring solar
 parcel." The proper next question is:
@@ -92,7 +95,7 @@ anchor for identifying coast-serving feeders, not a parcel cutoff. It then:
 - Removes NWI wetlands with a configurable 30-meter planning buffer.
 - Removes CPAD protected land.
 - Removes Prime, Statewide Importance, and Unique farmland.
-- Removes Fort Bragg city territory.
+- Retains Fort Bragg parcels and labels their separate planning jurisdiction.
 - Calculates gross, excluded, and screenable acreage.
 - Uses assessed improvement value per acre as a development-intensity proxy.
 
@@ -257,9 +260,9 @@ local coastal homes. It:
 - Rewards low terrain visibility from Highway 1.
 
 The grid-corridor run starts with 15,927 grid-accessible parcel features,
-creates 2,367 candidate sites after coarse constraints, and finds 206 sites with at least 10
+creates 2,381 candidate sites after coarse constraints, and finds 208 sites with at least 10
 contiguous suitable acres, a three-phase section within 1 kilometer, and
-acceptable assessed improvement intensity. Four of those also have at
+acceptable assessed improvement intensity. Five of those also have at
 least 500 kW of static generic-PV ICA.
 
 The highest-ranked sites now occur on the higher-demand Fort Bragg/Caspar
@@ -316,7 +319,7 @@ The revised result is:
 
 | Measure | Result |
 |---|---:|
-| Solar-storage rank | 1 of 206 |
+| Solar-storage rank | 1 of 208 |
 | Gross GIS area | 35.97 acres |
 | Wetland planning exclusion | 14.38 acres |
 | Screenable area after all vector exclusions | 21.58 acres |
@@ -350,7 +353,7 @@ remediation remain due-diligence issues rather than hidden score adjustments.
 
 ## Zoning composition
 
-The primary ranking contains 206 sites. Open Space zoning is excluded. `RL` is
+The primary ranking contains 208 sites. Open Space zoning is excluded. `RL` is
 Rangeland and is not counted as residential. Only `RR` (Rural Residential) and
 `RMR` (Remote Residential) are classified as residential in this summary.
 
@@ -362,17 +365,17 @@ land, wetland, demand, storage, Highway 1, and interconnection attributes.
 
 | Base zone | Meaning | Sites | Share |
 |---|---|---:|---:|
-| `RL` | Rangeland | 125 | 60.7% |
-| `AG` | Agricultural | 39 | 18.9% |
+| `RL` | Rangeland | 125 | 60.1% |
+| `AG` | Agricultural | 39 | 18.8% |
 | `RMR` | Remote Residential | 13 | 6.3% |
-| `RR` | Rural Residential | 10 | 4.9% |
+| `RR` | Rural Residential | 10 | 4.8% |
+| Unclassified | Blank County base-zone value | 7 | 3.4% |
 | `FL` | Forest Lands | 6 | 2.9% |
-| Unclassified | Blank County base-zone value | 5 | 2.4% |
 | `TP` | Timberland Production | 5 | 2.4% |
 | `PF` | Public Facilities | 2 | 1.0% |
 | `I` | Industrial | 1 | 0.5% |
 
-Therefore, **23 of 206 candidates (11.2 percent)** are residentially zoned:
+Therefore, **23 of 208 candidates (11.1 percent)** are residentially zoned:
 13 RMR and 10 RR. They represent approximately 784 gross acres, 419 contiguous
 suitable acres, and 76.2 MW of theoretical land-based PV potential.
 
@@ -537,8 +540,9 @@ a narrower resilience microgrid.
 - Includes distribution phase, voltage, ICA, feeder, customer, DG, and load
   information.
 - Preserves source provenance and caching.
-- Demonstrated the value of local validation by removing Fort Bragg and
-  recognizing Caspar solar-storage opportunities hidden by the hard ICA gate.
+- Demonstrated the value of local validation by separating planning
+  jurisdictions and recognizing Caspar solar-storage opportunities hidden by
+  the hard ICA gate.
 
 ## What the current model does not yet answer
 
@@ -631,8 +635,8 @@ screened land, a known local use case, three-phase distribution, and immediate
 ## Present conclusion
 
 The program narrowed 15,927 grid-accessible parcel features to a reviewable
-set. The storage-oriented revision now ranks 206 strategic sites, including 19
-wholly outside the Coastal Zone, and separately reports 4 sites with at least
+set. The storage-oriented revision now ranks 208 strategic sites, including 19
+wholly outside the Coastal Zone, and separately reports 5 sites with at least
 500 kW of static PV ICA.
 
 For the project now under consideration, APN `1180901200` should be treated as

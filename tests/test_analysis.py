@@ -12,6 +12,7 @@ from solar_siting.analysis import (
     grid_accessible_parcels,
     highway_metrics,
     highway_viewshed_metrics,
+    jurisdiction_metrics,
     nearest_pge_join,
     specific_yield_mwh_per_mw,
     terrain_line_visible,
@@ -133,6 +134,32 @@ def test_grid_accessible_parcels_follow_only_grid_that_reaches_anchor():
     assert selected["name"].tolist() == ["coastal", "inland"]
     assert selected_grid["feeder"].tolist() == ["coastal-reaching"]
     np.testing.assert_allclose(selected["scope_grid_distance_m"], [0, 0])
+
+
+def test_jurisdiction_metrics_label_parcels_by_majority_overlap():
+    side = ACRE_M2**0.5
+    parcels = gpd.GeoDataFrame(
+        geometry=[
+            box(0, 0, side, side),
+            box(side, 0, 2 * side, side),
+        ],
+        crs="EPSG:3310",
+    )
+    city = gpd.GeoDataFrame(
+        geometry=[box(0, 0, 1.5 * side, side)],
+        crs=parcels.crs,
+    )
+
+    acres, fractions, labels = jurisdiction_metrics(
+        parcels,
+        city,
+        "Mendocino County",
+        "City of Fort Bragg",
+    )
+
+    np.testing.assert_allclose(acres, [1, 0.5])
+    np.testing.assert_allclose(fractions, [1, 0.5])
+    assert labels.tolist() == ["City of Fort Bragg", "City of Fort Bragg"]
 
 
 def test_highway_metrics_classify_east_west_and_crossing():
