@@ -1280,6 +1280,7 @@ def analyze(
         "planning_jurisdiction",
         "score",
         "contiguous_acres",
+        "highway_1_side",
         "pge_GenCapacity_kW",
         "pge_GenericPVCapacity_kW",
         "pge_distance_m",

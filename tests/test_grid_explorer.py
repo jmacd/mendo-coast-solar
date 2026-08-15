@@ -22,3 +22,8 @@ def test_grid_explorer_loads_generated_layers_and_ranks_visible_candidates():
     assert "new maplibregl.Popup" not in content
     assert "[-123.855, 39.325]" in content
     assert "[-123.78, 39.415]" in content
+    assert 'id="hide-west" type="checkbox" checked' in content
+    assert 'id="hide-zero-ica" type="checkbox" checked' in content
+    assert "highway_1_side" in content
+    assert "parcelCenter(feature)" in content
+    assert 'id: "candidate-highlight-fill"' in content
