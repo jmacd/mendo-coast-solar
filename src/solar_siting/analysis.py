@@ -200,6 +200,24 @@ def constraint_overlap_acres(
     return np.array(overlaps, dtype=float)
 
 
+def jurisdiction_metrics(
+    parcels: gpd.GeoDataFrame,
+    municipal_boundary: gpd.GeoDataFrame,
+    default_label: str,
+    municipal_label: str,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    acres = constraint_overlap_acres(parcels, municipal_boundary)
+    gross_acres = parcels.geometry.area.to_numpy(dtype=float) / ACRE_M2
+    fractions = np.divide(
+        acres,
+        gross_acres,
+        out=np.zeros_like(acres),
+        where=gross_acres > 0,
+    )
+    labels = np.where(fractions >= 0.5, municipal_label, default_label)
+    return acres, fractions, labels
+
+
 def highway_metrics(
     sites: gpd.GeoDataFrame,
     highway: gpd.GeoDataFrame,
@@ -644,7 +662,10 @@ def analyze(
     scope_grid = gpd.read_file(
         data_dir / sources[scope_settings["distribution_source"]]["filename"]
     ).to_crs(crs)
-    fort_bragg = gpd.read_file(data_dir / sources["fort_bragg"]["filename"]).to_crs(crs)
+    municipal_boundary = gpd.read_file(
+        data_dir
+        / sources[scope_settings["municipal_jurisdiction_source"]]["filename"]
+    ).to_crs(crs)
     parcels = gpd.read_file(data_dir / sources["parcels"]["filename"]).to_crs(crs)
     parcels.geometry = parcels.geometry.make_valid()
     wetlands = gpd.read_file(data_dir / sources["wetlands"]["filename"]).to_crs(crs)
@@ -686,11 +707,13 @@ def analyze(
     wetlands = wetlands[wetlands.geometry.intersects(parcel_bounds)]
     protected = protected[protected.geometry.intersects(parcel_bounds)]
     farmland = farmland[farmland.geometry.intersects(parcel_bounds)]
-    fort_bragg = fort_bragg[fort_bragg.geometry.intersects(parcel_bounds)]
+    municipal_boundary = municipal_boundary[
+        municipal_boundary.geometry.intersects(parcel_bounds)
+    ]
     print(
         "constraint features: "
         f"{len(wetlands)} wetlands, {len(protected)} protected, "
-        f"{len(farmland)} farmland, {len(fort_bragg)} Fort Bragg boundary",
+        f"{len(farmland)} farmland, {len(municipal_boundary)} municipal boundary",
         flush=True,
     )
 
@@ -709,15 +732,17 @@ def analyze(
     farmland_constraints = gpd.GeoDataFrame(
         geometry=gpd.GeoSeries(list(prime_farmland.geometry.make_valid()), crs=crs)
     )
-    city_constraints = gpd.GeoDataFrame(
-        geometry=gpd.GeoSeries(list(fort_bragg.geometry.make_valid()), crs=crs)
+    municipal_context = gpd.GeoDataFrame(
+        geometry=gpd.GeoSeries(
+            list(municipal_boundary.geometry.make_valid()),
+            crs=crs,
+        )
     )
     constraints = gpd.GeoDataFrame(
         geometry=gpd.GeoSeries(
             list(wetland_constraints.geometry)
             + list(protected_constraints.geometry)
-            + list(farmland_constraints.geometry)
-            + list(city_constraints.geometry),
+            + list(farmland_constraints.geometry),
             crs=crs,
         ),
     )
@@ -738,6 +763,16 @@ def analyze(
     )
     parcels["scope_anchor_label"] = scope_settings["anchor_label"]
     parcels["gross_acres"] = parcels.geometry.area / ACRE_M2
+    (
+        parcels["municipal_jurisdiction_acres"],
+        parcels["municipal_jurisdiction_fraction"],
+        parcels["planning_jurisdiction"],
+    ) = jurisdiction_metrics(
+        parcels,
+        municipal_context,
+        scope_settings["default_jurisdiction"],
+        scope_settings["municipal_jurisdiction_label"],
+    )
     parcels["wetland_exclusion_acres"] = constraint_overlap_acres(
         parcels,
         wetland_constraints,
@@ -749,10 +784,6 @@ def analyze(
     parcels["farmland_exclusion_acres"] = constraint_overlap_acres(
         parcels,
         farmland_constraints,
-    )
-    parcels["city_exclusion_acres"] = constraint_overlap_acres(
-        parcels,
-        city_constraints,
     )
     parcels.geometry = subtract_constraints(parcels, constraints)
     parcels["screenable_acres"] = parcels.geometry.area / ACRE_M2
@@ -1134,13 +1165,15 @@ def analyze(
         "scope_grid_distance_m",
         "scope_anchor_fraction",
         "scope_anchor_label",
+        "planning_jurisdiction",
+        "municipal_jurisdiction_acres",
+        "municipal_jurisdiction_fraction",
         "gross_acres",
         "screenable_acres",
         "excluded_acres",
         "wetland_exclusion_acres",
         "protected_exclusion_acres",
         "farmland_exclusion_acres",
-        "city_exclusion_acres",
         "improvement_value",
         "improvement_value_per_acre",
         "flat_fraction",
@@ -1218,8 +1251,42 @@ def analyze(
     )
     public = screened[screened["eligible"]].copy()
     public["rank"] = public["rank"].astype(int)
+    ica_columns = [
+        "FeederId",
+        "FeederName",
+        "CSV_LineSection",
+        "GenCapacity_kW",
+        "GenericPVCapacity_kW",
+        "voltage_kv",
+        "phase_cnt",
+        "ICA_Analysis_Date",
+        "geometry",
+    ]
+    (output_dir / "ica-sections.geojson").write_text(
+        pge_ica[ica_columns].to_crs("EPSG:4326").to_json(drop_id=True)
+    )
+    (output_dir / "distribution-grid.geojson").write_text(
+        anchor_grid.to_crs("EPSG:4326").to_json(drop_id=True)
+    )
     (output_dir / "ranked-parcels.geojson").write_text(
         public.to_crs("EPSG:4326").to_json(drop_id=True)
+    )
+    grid_candidate_columns = [
+        "rank",
+        "site_apns",
+        "SITUS_ADD",
+        "SITUS_CTY",
+        "BASEZONE",
+        "planning_jurisdiction",
+        "score",
+        "contiguous_acres",
+        "pge_GenCapacity_kW",
+        "pge_GenericPVCapacity_kW",
+        "pge_distance_m",
+        "geometry",
+    ]
+    (output_dir / "grid-candidates.geojson").write_text(
+        public[grid_candidate_columns].to_crs("EPSG:4326").to_json(drop_id=True)
     )
     public.drop(columns="geometry").to_csv(output_dir / "ranked-parcels.csv", index=False)
     write_candidate_map(public, output_dir / "candidate-map.html")

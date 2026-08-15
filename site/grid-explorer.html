@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mendocino Coast grid and solar candidates</title>
+  <link rel="stylesheet"
+    href="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css"
+    integrity="sha384-Nq6PQ+9vJPvw7U/VfDELyrWoGQMsy0gi6QShhaSrGzkpF5KkM40csg2leky+YMTd"
+    crossorigin="anonymous">
+  <style>
+    :root {
+      --ink: #173128;
+      --muted: #52675f;
+      --cream: #fffdf7;
+      --line: #cbd4ca;
+      --low: #e76f00;
+      --medium: #e6ab02;
+      --high: #15583b;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body, #app { height: 100%; margin: 0; overflow: hidden; }
+    #app {
+      background: #dce9eb;
+      display: grid;
+      grid-template-columns: minmax(218px, 35%) minmax(0, 1fr);
+      position: relative;
+    }
+    #sidebar {
+      background: rgba(255, 253, 247, .96);
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      position: relative;
+      z-index: 3;
+    }
+    .sidebar-head { border-bottom: 1px solid var(--line); padding: 14px 16px 12px; }
+    h1 { font: 700 18px/1.15 Georgia, serif; margin: 0 0 4px; }
+    .summary { color: var(--muted); font-size: 11px; margin: 0; }
+    .legends {
+      border-bottom: 1px solid var(--line);
+      display: grid;
+      gap: 8px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      padding: 10px 16px;
+    }
+    .legend h2 {
+      font-size: 10px;
+      letter-spacing: .08em;
+      margin: 0 0 6px;
+      text-transform: uppercase;
+    }
+    .key {
+      align-items: center;
+      color: var(--muted);
+      display: flex;
+      font-size: 9px;
+      gap: 5px;
+      margin: 3px 0;
+      white-space: nowrap;
+    }
+    .swatch { display: inline-block; flex: 0 0 22px; height: 7px; }
+    .zone { height: 10px; }
+    .candidate-heading {
+      align-items: baseline;
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 16px 5px;
+    }
+    .candidate-heading h2 { font-size: 12px; margin: 0; }
+    #visible-count { color: var(--muted); font-size: 9px; }
+    #candidate-list {
+      list-style: none;
+      margin: 0;
+      overflow: auto;
+      padding: 0 16px 12px;
+    }
+    .candidate-item { border-bottom: 1px solid #e2e6df; }
+    .candidate {
+      background: transparent;
+      border: 0;
+      color: var(--ink);
+      cursor: pointer;
+      display: grid;
+      font: inherit;
+      gap: 0 7px;
+      grid-template-columns: 24px minmax(0, 1fr);
+      padding: 7px 0;
+      text-align: left;
+      width: 100%;
+    }
+    .candidate:hover, .candidate:focus-visible, .candidate.active {
+      background: #edf3ed;
+      outline: none;
+    }
+    .rank {
+      align-items: center;
+      border: 2px solid var(--zone);
+      border-radius: 50%;
+      display: flex;
+      font-size: 9px;
+      font-weight: 800;
+      grid-row: 1 / span 2;
+      height: 22px;
+      justify-content: center;
+      width: 22px;
+    }
+    .address { font-size: 10px; font-weight: 750; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .details { color: var(--muted); font-size: 9px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .candidate-detail {
+      background: #f2f5ef;
+      display: grid;
+      font-size: 9px;
+      gap: 3px 8px;
+      grid-template-columns: auto minmax(0, 1fr);
+      margin: 0 0 8px 31px;
+      padding: 7px 8px;
+    }
+    .candidate-detail span { color: var(--muted); }
+    .candidate-detail b { font-weight: 650; overflow-wrap: anywhere; }
+    .sidebar-foot {
+      background: var(--cream);
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 9px;
+      padding: 7px 16px;
+    }
+    .sidebar-foot a { color: var(--ink); font-weight: 700; }
+    #map { min-width: 0; }
+    #leaders { inset: 0; pointer-events: none; position: absolute; z-index: 4; }
+    #leaders path { fill: none; stroke: #17201c; stroke-width: 1; vector-effect: non-scaling-stroke; }
+    #status {
+      background: var(--cream);
+      border-radius: 8px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, .16);
+      font-size: 11px;
+      left: calc(35% + 16px);
+      padding: 8px 10px;
+      position: absolute;
+      top: 16px;
+      z-index: 5;
+    }
+    #status[hidden] { display: none; }
+    @media (max-width: 620px) {
+      #app { grid-template-columns: minmax(190px, 43%) minmax(0, 1fr); }
+      #status { left: calc(43% + 8px); }
+      .legends { grid-template-columns: 1fr; }
+      .legend-zoning { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main id="app">
+    <aside id="sidebar">
+      <div class="sidebar-head">
+        <h1>Coastal distribution grid</h1>
+        <p class="summary">Pan and zoom to re-rank candidates in the local view.</p>
+      </div>
+      <div class="legends">
+        <section class="legend">
+          <h2>Integration capacity</h2>
+          <div class="key"><i class="swatch" style="background:#e76f00"></i>&lt;200 kW</div>
+          <div class="key"><i class="swatch" style="background:#e6ab02"></i>200-299 kW</div>
+          <div class="key"><i class="swatch" style="background:#15583b"></i>&ge;300 kW</div>
+          <div class="key"><i class="swatch" style="background:#7b817e"></i>Not published</div>
+        </section>
+        <section class="legend legend-zoning">
+          <h2>Candidate zoning</h2>
+          <div class="key"><i class="swatch zone" style="background:#1f78b4"></i>Industrial</div>
+          <div class="key"><i class="swatch zone" style="background:#6a3d9a"></i>Remote residential</div>
+          <div class="key"><i class="swatch zone" style="background:#e31a1c"></i>Rural residential</div>
+          <div class="key"><i class="swatch zone" style="background:#8c6d31"></i>Rangeland</div>
+        </section>
+      </div>
+      <div class="candidate-heading">
+        <h2>Best candidates in view</h2>
+        <span id="visible-count"></span>
+      </div>
+      <ol id="candidate-list"></ol>
+      <div class="sidebar-foot">
+        Published ICA covers primary distribution sections, not every local line.
+        <a href="grid-explorer.html" target="_blank" rel="noopener">Open full screen</a>
+        &middot; <a href="candidate-map.html" target="_blank" rel="noopener">County-wide ranking</a>
+      </div>
+    </aside>
+    <div id="map" aria-label="Interactive distribution grid and solar candidate map"></div>
+    <svg id="leaders" aria-hidden="true"></svg>
+    <div id="status">Loading grid and candidates...</div>
+  </main>
+  <script src="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js"
+    integrity="sha384-/L1njH4bbgNt9Uk3HwJ272N9fxJzRBQCxhtwGkZiqgl+Nxpq2ETUNZhNMNV1RgyW"
+    crossorigin="anonymous"></script>
+  <script>
+    const MAX_VISIBLE = 12;
+    const zoneColors = {
+      RL: "#8c6d31", AG: "#e6ab02", RMR: "#6a3d9a", RR: "#e31a1c",
+      FL: "#1b9e77", TP: "#006d2c", OS: "#66c2a5", I: "#1f78b4",
+      PF: "#7570b3", Unclassified: "#969696"
+    };
+    const zoneLabels = {
+      RL: "Rangeland", AG: "Agricultural", RMR: "Remote residential",
+      RR: "Rural residential", FL: "Forest lands", TP: "Timberland production",
+      OS: "Open space", I: "Industrial", PF: "Public facilities",
+      Unclassified: "Unclassified"
+    };
+    const app = document.querySelector("#app");
+    const list = document.querySelector("#candidate-list");
+    const leaders = document.querySelector("#leaders");
+    const status = document.querySelector("#status");
+    const visibleCount = document.querySelector("#visible-count");
+    let candidates = [];
+    let displayed = [];
+    let visibleCandidates = [];
+    let activeApn = null;
+
+    const map = new maplibregl.Map({
+      container: "map",
+      style: "https://tiles.openfreemap.org/styles/liberty",
+      bounds: [[-123.855, 39.325], [-123.78, 39.415]],
+      fitBoundsOptions: { padding: 16 },
+      maxPitch: 0,
+      attributionControl: true
+    });
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+    map.addControl(new maplibregl.ScaleControl({ unit: "imperial" }), "bottom-right");
+
+    function esc(value) {
+      return String(value ?? "").replace(/[&<>"']/g, character => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      })[character]);
+    }
+    function clean(value) {
+      const text = String(value ?? "").trim();
+      return ["", "NONE", "N/A", "NULL"].includes(text.toUpperCase()) ? "" : text;
+    }
+    function address(properties) {
+      return clean(properties.SITUS_ADD) || `APN ${properties.site_apns}`;
+    }
+    function formatIca(value) {
+      const capacity = Number(value);
+      return value !== null && value !== "" && Number.isFinite(capacity)
+        ? `${capacity.toFixed(0)} kW`
+        : "Not published";
+    }
+    function allCoordinates(geometry) {
+      const result = [];
+      function visit(value) {
+        if (!Array.isArray(value)) return;
+        if (typeof value[0] === "number") result.push(value);
+        else value.forEach(visit);
+      }
+      visit(geometry.coordinates);
+      return result;
+    }
+    function featureBounds(feature) {
+      const coordinates = allCoordinates(feature.geometry);
+      return coordinates.reduce((bounds, coordinate) => {
+        bounds[0] = Math.min(bounds[0], coordinate[0]);
+        bounds[1] = Math.min(bounds[1], coordinate[1]);
+        bounds[2] = Math.max(bounds[2], coordinate[0]);
+        bounds[3] = Math.max(bounds[3], coordinate[1]);
+        return bounds;
+      }, [Infinity, Infinity, -Infinity, -Infinity]);
+    }
+    function intersectsView(feature, bounds) {
+      const extent = feature._bounds;
+      return extent[0] <= bounds.getEast() && extent[2] >= bounds.getWest()
+        && extent[1] <= bounds.getNorth() && extent[3] >= bounds.getSouth();
+    }
+    function westernAnchor(feature) {
+      const points = allCoordinates(feature.geometry).map(coordinate => ({
+        coordinate,
+        point: map.project(coordinate)
+      }));
+      const west = Math.min(...points.map(item => item.point.x));
+      const western = points.filter(item => item.point.x <= west + .75);
+      return {
+        coordinate: western[0].coordinate,
+        point: {
+          x: west,
+          y: western.reduce((sum, item) => sum + item.point.y, 0) / western.length
+        }
+      };
+    }
+    function candidateColor(properties) {
+      const zone = clean(properties.BASEZONE) || "Unclassified";
+      return zoneColors[zone] || zoneColors.Unclassified;
+    }
+    function candidateId(feature) {
+      return String(feature.properties.site_apns);
+    }
+    function candidateDetailHtml(properties) {
+      const zone = clean(properties.BASEZONE) || "Unclassified";
+      return `<div class="candidate-detail">
+        <span>APN</span><b>${esc(properties.site_apns)}</b>
+        <span>Jurisdiction</span><b>${esc(properties.planning_jurisdiction)}</b>
+        <span>Zoning</span><b>${esc(zoneLabels[zone] || zone)}</b>
+        <span>Suitable land</span><b>${Number(properties.contiguous_acres).toFixed(1)} acres</b>
+        <span>Generic generation ICA</span><b>${formatIca(properties.pge_GenCapacity_kW)}</b>
+        <span>Generic PV ICA</span><b>${formatIca(properties.pge_GenericPVCapacity_kW)}</b>
+        <span>Nearest section</span><b>${Number(properties.pge_distance_m).toFixed(0)} m</b>
+      </div>`;
+    }
+    function renderCandidateList() {
+      const best = visibleCandidates.slice(0, MAX_VISIBLE);
+      const activeIndex = visibleCandidates.findIndex(
+        feature => candidateId(feature) === activeApn
+      );
+      if (activeIndex >= MAX_VISIBLE) best[MAX_VISIBLE - 1] = visibleCandidates[activeIndex];
+      displayed = best
+        .map(feature => ({
+          feature,
+          localRank: visibleCandidates.indexOf(feature) + 1,
+          anchor: westernAnchor(feature)
+        }))
+        .sort((left, right) => left.anchor.point.y - right.anchor.point.y);
+      visibleCount.textContent = `${best.length} of ${visibleCandidates.length}`;
+      list.replaceChildren();
+      let activeRow = null;
+      for (const item of displayed) {
+        const properties = item.feature.properties;
+        const zone = clean(properties.BASEZONE) || "Unclassified";
+        const row = document.createElement("li");
+        row.className = "candidate-item";
+        const button = document.createElement("button");
+        const isActive = candidateId(item.feature) === activeApn;
+        button.className = `candidate${isActive ? " active" : ""}`;
+        button.type = "button";
+        button.setAttribute("aria-expanded", String(isActive));
+        button.style.setProperty("--zone", candidateColor(properties));
+        button.innerHTML = `<span class="rank">${item.localRank}</span>
+          <span class="address">${esc(address(properties))}</span>
+          <span class="details">County #${esc(properties.rank)} &middot;
+          ${esc(zoneLabels[zone] || zone)} &middot;
+          ${formatIca(properties.pge_GenericPVCapacity_kW)} ICA</span>`;
+        button.addEventListener("click", () => {
+          if (activeApn === candidateId(item.feature)) {
+            activeApn = null;
+            renderCandidateList();
+            return;
+          }
+          activeApn = candidateId(item.feature);
+          renderCandidateList();
+          const extent = item.feature._bounds;
+          map.fitBounds([[extent[0], extent[1]], [extent[2], extent[3]]], {
+            maxZoom: 15,
+            padding: 70
+          });
+        });
+        row.append(button);
+        if (isActive) {
+          row.insertAdjacentHTML("beforeend", candidateDetailHtml(properties));
+          activeRow = row;
+        }
+        list.append(row);
+      }
+      requestAnimationFrame(() => {
+        activeRow?.scrollIntoView({ block: "nearest" });
+        drawLeaders();
+      });
+    }
+    function updateVisibleCandidates() {
+      if (!candidates.length) return;
+      const bounds = map.getBounds();
+      visibleCandidates = candidates
+        .filter(feature => intersectsView(feature, bounds))
+        .sort((left, right) => Number(right.properties.score) - Number(left.properties.score));
+      if (!visibleCandidates.some(feature => candidateId(feature) === activeApn)) {
+        activeApn = null;
+      }
+      renderCandidateList();
+    }
+    function drawLeaders() {
+      const appRect = app.getBoundingClientRect();
+      const mapRect = map.getContainer().getBoundingClientRect();
+      leaders.setAttribute("viewBox", `0 0 ${appRect.width} ${appRect.height}`);
+      leaders.replaceChildren();
+      if (!displayed.length) return;
+      const routeX = mapRect.left - appRect.left + 12;
+      [...list.children].forEach((row, index) => {
+        const rowRect = row.querySelector(".candidate").getBoundingClientRect();
+        const anchor = westernAnchor(displayed[index].feature).point;
+        const startX = rowRect.right - appRect.left;
+        const startY = rowRect.top + rowRect.height / 2 - appRect.top;
+        const targetX = mapRect.left - appRect.left + anchor.x;
+        const targetY = mapRect.top - appRect.top + anchor.y;
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute(
+          "d",
+          `M${startX.toFixed(1)},${startY.toFixed(1)} ` +
+          `L${routeX.toFixed(1)},${targetY.toFixed(1)} ` +
+          `L${targetX.toFixed(1)},${targetY.toFixed(1)}`
+        );
+        leaders.append(path);
+      });
+    }
+    function addDataLayers(ica, grid, candidateData) {
+      candidates = candidateData.features.map(feature => {
+        feature._bounds = featureBounds(feature);
+        return feature;
+      });
+      map.addSource("distribution-grid", { type: "geojson", data: grid });
+      map.addLayer({
+        id: "distribution-grid",
+        type: "line",
+        source: "distribution-grid",
+        paint: { "line-color": "#67746d", "line-opacity": .34, "line-width": 1.5 }
+      });
+      map.addSource("ica", { type: "geojson", data: ica });
+      map.addLayer({
+        id: "ica-casing",
+        type: "line",
+        source: "ica",
+        paint: { "line-color": "#fffdf7", "line-width": 7, "line-opacity": .92 }
+      });
+      map.addLayer({
+        id: "ica",
+        type: "line",
+        source: "ica",
+        paint: {
+          "line-color": [
+            "case",
+            ["<", ["coalesce", ["get", "GenericPVCapacity_kW"], -1], 0], "#7b817e",
+            ["<", ["coalesce", ["get", "GenericPVCapacity_kW"], -1], 200], "#e76f00",
+            ["<", ["get", "GenericPVCapacity_kW"], 300], "#e6ab02",
+            "#15583b"
+          ],
+          "line-width": 4
+        }
+      });
+      map.addSource("candidates", { type: "geojson", data: candidateData });
+      const zoneExpression = [
+        "match", ["coalesce", ["get", "BASEZONE"], "Unclassified"],
+        "RL", "#8c6d31", "AG", "#e6ab02", "RMR", "#6a3d9a",
+        "RR", "#e31a1c", "FL", "#1b9e77", "TP", "#006d2c",
+        "OS", "#66c2a5", "I", "#1f78b4", "PF", "#7570b3", "#969696"
+      ];
+      map.addLayer({
+        id: "candidate-fill",
+        type: "fill",
+        source: "candidates",
+        paint: { "fill-color": zoneExpression, "fill-opacity": .34 }
+      });
+      map.addLayer({
+        id: "candidate-outline",
+        type: "line",
+        source: "candidates",
+        paint: { "line-color": zoneExpression, "line-width": 2.5 }
+      });
+      map.on("click", "candidate-fill", event => {
+        const selected = candidates.find(
+          feature => candidateId(feature) === candidateId(event.features[0])
+        );
+        if (!selected) return;
+        activeApn = candidateId(selected);
+        renderCandidateList();
+      });
+      map.on("mouseenter", "candidate-fill", () => { map.getCanvas().style.cursor = "pointer"; });
+      map.on("mouseleave", "candidate-fill", () => { map.getCanvas().style.cursor = ""; });
+      status.hidden = true;
+      updateVisibleCandidates();
+    }
+
+    map.on("load", async () => {
+      try {
+        const responses = await Promise.all([
+          fetch("ica-sections.geojson"),
+          fetch("distribution-grid.geojson"),
+          fetch("grid-candidates.geojson")
+        ]);
+        if (responses.some(response => !response.ok)) {
+          throw new Error("One or more generated map layers could not be loaded");
+        }
+        addDataLayers(...await Promise.all(responses.map(response => response.json())));
+      } catch (error) {
+        status.textContent = error.message;
+      }
+    });
+    map.on("move", drawLeaders);
+    map.on("moveend", updateVisibleCandidates);
+    map.on("resize", () => requestAnimationFrame(drawLeaders));
+    list.addEventListener("scroll", drawLeaders);
+    new ResizeObserver(() => {
+      map.resize();
+      drawLeaders();
+    }).observe(app);
+  </script>
+</body>
+</html>

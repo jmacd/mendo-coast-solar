@@ -102,6 +102,9 @@ This preserves the original assumptions for comparison.
 | `output/ranked-parcels.csv` | Primary solar-storage ranking |
 | `output/ranked-parcels.geojson` | Ranked site geometry for QGIS or web maps |
 | `output/candidate-map.html` | Interactive aerial map colored by base zoning |
+| `output/grid-candidates.geojson` | Lightweight candidate layer for the local grid explorer |
+| `output/ica-sections.geojson` | Published PG&E ICA sections for the grid explorer |
+| `output/distribution-grid.geojson` | Coast-serving feeder geometry for the grid explorer |
 | `output/distribution-ready-parcels.*` | Subset with at least 500 kW of static PV ICA |
 | `output/screened-parcels.csv` | All analyzed parcels, including failed gates |
 | `output/screened-parcels.geojson` | Screened parcel geometry and diagnostics |
@@ -135,6 +138,11 @@ sections and zoning-colored candidate parcels on an OpenStreetMap basemap.
 Candidate addresses and static-PV ICA values are connected to parcel
 boundaries. Basemap tiles are downloaded once to `data/osm-tiles/` and cached
 for later renders.
+
+The landing page uses `site/grid-explorer.html` for the live version of this
+view. It renders a crisp vector basemap, follows pan and zoom anywhere along
+the coast, and re-ranks the best candidates in the visible region. The
+county-wide ranking remains available in `candidate-map.html`.
 
 Useful output fields include:
 
@@ -241,8 +249,8 @@ as follows:
 2. Remove wetlands with a 30-meter planning buffer.
 3. Remove CPAD protected lands.
 4. Remove Prime, Statewide Importance, and Unique farmland.
-5. Remove land inside Fort Bragg city limits because this study concerns
-   unincorporated County planning.
+5. Classify sites by Mendocino County or City of Fort Bragg planning
+   jurisdiction without subtracting incorporated land.
 6. Exclude parcels with County base zoning `OS` (Open Space).
 7. Combine touching industrial parcels into candidate assemblages; keep other
    parcels as individual candidates.

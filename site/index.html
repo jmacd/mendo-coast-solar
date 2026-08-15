@@ -54,7 +54,7 @@
       <div class="transmission-intro">
         <div class="section-heading">
           <p class="eyebrow">The edge of the grid</p>
-          <h2>If we want sustainable energy, we have to make it here</h2>
+          <h2>If we want sustainable energy, we have to make it here.</h2>
           <p>
             The electric grid carries energy over transmission lines
             that separate major population centers. Our capacity to
@@ -123,13 +123,16 @@
       <div class="transmission-intro">
         <div class="section-heading">
           <p class="eyebrow">Local generation</p>
-          <h2>The neighborhood grid shapes what can connect</h2>
+          <h2>The local high-voltage grid connects our former
+            industrial sites.</h2>
           <p>
-            Between Hare Creek and Russian Gulch, PG&amp;E's published
-            Integration Capacity Analysis divides parts of the 12 kV
-            distribution grid into sections. Comparing those sections with
-            nearby candidate parcels shows both the opportunities and the
-            limits of the public data.
+            The Mendocino Coast is served by a local distribution grid
+            of 12kV power lines that links our towns. These lines were
+            upgraded in the late 1940s when PG&amp;E expanded service
+            to a wider residential area and connected the local mills
+            to phase out use of coal and kerosine.  Locations with
+            access to the 12kV local distribution network are ideal
+            sites for solar generation.
           </p>
         </div>
         <div class="transmission-art" aria-hidden="true">
@@ -144,36 +147,47 @@
       </div>
       <div class="transmission-layout">
         <div class="local-grid-map">
-          <img class="grid-map" src="caspar-local-grid.svg"
-            alt="Map of color-coded Integration Capacity sections and
-            zoning-colored candidate parcels between Hare Creek and Russian
-            Gulch, with addresses connected to candidate boundaries.">
+          <iframe class="grid-explorer-frame" src="grid-explorer.html"
+            title="Interactive map of Integration Capacity sections and ranked solar candidates"></iframe>
         </div>
         <div class="finding-grid">
           <article>
-            <h3>Published sections are incomplete</h3>
-            <p>The colored lines are sections with published ICA geometry,
-              not a complete inventory of every local conductor. An uncolored
-              branch means its section-level capacity is unknown here, not
-              that its capacity is zero.</p>
+            <h3>Generation limits</h3>
+            <p>Connecting a new solar generation facility to the
+              energy grid shifts the dynamics of the grid. Electricity
+              follows the path of least resistance and goes to serve
+              the nearest demand. The farther energy travels the
+              greater the waste; physical grid capacity means that
+              generation is limited by local demand.</p>
           </article>
           <article>
-            <h3>Use the nearest section</h3>
-            <p>Each candidate is compared with the nearest mapped section.
-              The analysis does not substitute a more distant, higher-capacity
-              section across a branch point or transfer switch.</p>
+            <h3>Integration capacity</h3>
+            <p>Before connecting a new generation facility to the
+              grid, the utility company must perform an analysis of
+              the capacity for new energy production. CPUC requires
+              energy utilities to publish Integration Capacity
+              Analysis (ICA) numbers for sections of the grid to
+              assist solar developers identify candidate sites.</p>
           </article>
           <article>
-            <h3>Land use remains visible</h3>
-            <p>Candidate boundaries retain the zoning colors used in the data
-              explorer. Industrial, remote residential, and rural residential
-              sites can have very different permitting and community impacts.</p>
+            <h3>Power control</h3>
+            <p>Published ICA numbers are based on a variety of factors
+              indicating how much power can be safely introduced
+              without overloading the system. There are actually two
+              ICA numbers, one for always-on facilities and one for
+              solar-only generation. Facilities have to limit
+              generation to comply with the utility.
+            </p>
           </article>
           <article>
-            <h3>ICA is a planning screen</h3>
-            <p>Integration Capacity estimates additional instantaneous export
-              under modeled conditions. Neighboring section values are not
-              independent, additive, or reserved for any candidate project.</p>
+            <h3>Energy storage</h3>
+            <p>The ICA number limits what a generation facility can
+              produce at the peak, while sunshine limits energy
+              generation to approximately 20% of the day in the
+              Coastal zone. Adding battery storage to the solar
+              facility overcomes these limits, allowing a larger
+              facility to generate throughout the day.
+            </p>
           </article>
         </div>
       </div>
@@ -187,7 +201,7 @@
           A weighted score then compares candidates that remain.</p>
       </div>
       <img class="wide-graphic" src="analysis-pipeline.svg"
-        alt="Analysis pipeline from public data through exclusions, terrain and grid analysis to 206 ranked candidates.">
+        alt="Analysis pipeline from public data through exclusions, terrain and grid analysis to 208 ranked candidates.">
 
       <div class="method-grid">
         <article>
@@ -195,7 +209,8 @@
           <h3>Define usable land</h3>
           <p>Select full parcels near coast-serving distribution feeders,
             remove wetlands and selected protected or important farmland, and
-            exclude Fort Bragg and County Open Space zoning.</p>
+            retain planning jurisdiction while excluding County Open Space
+            zoning.</p>
         </article>
         <article>
           <span class="step">02</span>

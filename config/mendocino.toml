@@ -13,6 +13,9 @@ anchor_source = "coastal_zone"
 anchor_label = "Coastal Zone"
 distribution_source = "pge_feeders"
 max_grid_distance_m = 1000.0
+default_jurisdiction = "Mendocino County"
+municipal_jurisdiction_source = "fort_bragg"
+municipal_jurisdiction_label = "City of Fort Bragg"
 
 [sources.coastal_zone]
 kind = "arcgis-vector"
