@@ -32,6 +32,15 @@ fields = ["OBJECTID", "CDT_NAME_SHORT", "CDTFA_COUNTY"]
 filename = "fort-bragg-city-limits.geojson"
 required = true
 
+[sources.county_boundary]
+kind = "arcgis-vector"
+url = "https://services1.arcgis.com/jUJYIo9tSA7EHvfZ/arcgis/rest/services/California_County_Boundaries/FeatureServer/0"
+where = "COUNTY_NAME = 'Mendocino County'"
+bbox = [-124.15, 38.7, -122.7, 40.1]
+fields = ["OBJECTID", "COUNTY_NAME"]
+filename = "mendocino-county-boundary.geojson"
+required = true
+
 [sources.parcels]
 kind = "arcgis-vector"
 url = "https://services2.arcgis.com/iq8zYa0SRsvIFFKz/arcgis/rest/services/Mendocino_County_Parcels/FeatureServer/0"

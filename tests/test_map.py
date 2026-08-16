@@ -59,9 +59,11 @@ def test_candidate_map_embeds_sites_and_zoning(tmp_path):
     assert '["ica-sections.geojson", "12 kV distribution"]' in content
     assert '["transmission-lines.geojson", "Transmission network"]' in content
     assert '"distribution-substations.geojson"' in content
+    assert '"county-boundary.geojson"' in content
     assert 'layerControl.addOverlay(distributionLayer, "12 kV distribution")' in content
     assert '`Transmission (${voltages.join("/")} kV)`' in content
     assert 'layerControl.addOverlay(substationLayer, "Distribution substations")' in content
+    assert 'layerControl.addOverlay(countyLayer, "Mendocino County boundary")' in content
     assert "Coastal Zone" in content
     assert '<option value="RR">Rural Residential: RR</option>' in content
     assert '<option value="RMR">Remote Residential: RMR</option>' in content

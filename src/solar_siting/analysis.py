@@ -680,6 +680,9 @@ def analyze(
         data_dir
         / sources[scope_settings["municipal_jurisdiction_source"]]["filename"]
     ).to_crs(crs)
+    county_boundary = gpd.read_file(
+        data_dir / sources["county_boundary"]["filename"]
+    ).to_crs(crs)
     parcels = gpd.read_file(data_dir / sources["parcels"]["filename"]).to_crs(crs)
     parcels.geometry = parcels.geometry.make_valid()
     wetlands = gpd.read_file(data_dir / sources["wetlands"]["filename"]).to_crs(crs)
@@ -1293,6 +1296,9 @@ def analyze(
     )
     (output_dir / "transmission-lines.geojson").write_text(
         pge_transmission_lines.to_crs("EPSG:4326").to_json(drop_id=True)
+    )
+    (output_dir / "county-boundary.geojson").write_text(
+        county_boundary.to_crs("EPSG:4326").to_json(drop_id=True)
     )
     (output_dir / "ranked-parcels.geojson").write_text(
         public.to_crs("EPSG:4326").to_json(drop_id=True)

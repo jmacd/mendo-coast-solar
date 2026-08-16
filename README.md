@@ -107,6 +107,7 @@ This preserves the original assumptions for comparison.
 | `output/distribution-grid.geojson` | Coast-serving feeder geometry for the grid explorer |
 | `output/distribution-substations.geojson` | Published PG&E distribution-substation points |
 | `output/transmission-lines.geojson` | Published PG&E 60, 115, and 230 kV transmission lines |
+| `output/county-boundary.geojson` | Mendocino County study boundary for map context |
 | `output/distribution-ready-parcels.*` | Subset with at least 500 kW of static PV ICA |
 | `output/screened-parcels.csv` | All analyzed parcels, including failed gates |
 | `output/screened-parcels.geojson` | Screened parcel geometry and diagnostics |

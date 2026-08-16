@@ -293,7 +293,8 @@ async function loadInfrastructure() {
   const resources = [
     ["ica-sections.geojson", "12 kV distribution"],
     ["transmission-lines.geojson", "Transmission network"],
-    ["distribution-substations.geojson", "Distribution substations"]
+    ["distribution-substations.geojson", "Distribution substations"],
+    ["county-boundary.geojson", "Mendocino County boundary"]
   ];
   const responses = await Promise.all(resources.map(([url]) => fetch(url)));
   const failed = responses
@@ -302,9 +303,23 @@ async function loadInfrastructure() {
   if (failed.length) {
     throw new Error(`Could not load ${failed.join(", ")}`);
   }
-  const [distribution, transmission, substations] = await Promise.all(
+  const [distribution, transmission, substations, county] = await Promise.all(
     responses.map(response => response.json())
   );
+  const countyLayer = L.geoJSON(county, {
+    pane: "infrastructure-lines",
+    style: {
+      color: "#17201c",
+      dashArray: "8 6",
+      fill: false,
+      opacity: .9,
+      weight: 2.5
+    },
+    onEachFeature: (feature, layer) => layer.bindTooltip(
+      esc(feature.properties.COUNTY_NAME || "Mendocino County boundary"),
+      { sticky: true }
+    )
+  }).addTo(map);
   const distributionLayer = L.geoJSON(distribution, {
     pane: "infrastructure-lines",
     style: { color: "#e76f00", opacity: .58, weight: 1.35 },
@@ -372,6 +387,7 @@ async function loadInfrastructure() {
     `Transmission (${voltages.join("/")} kV)`
   );
   layerControl.addOverlay(substationLayer, "Distribution substations");
+  layerControl.addOverlay(countyLayer, "Mendocino County boundary");
   document.querySelector("#infrastructure-status").textContent =
     `${substations.features.length} feeder substations shown`;
 }
