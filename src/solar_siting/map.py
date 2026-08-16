@@ -61,7 +61,7 @@ def write_candidate_map(sites: gpd.GeoDataFrame, destination: Path) -> None:
     :root { color-scheme: light; font: 14px/1.35 system-ui, sans-serif; }
     * { box-sizing: border-box; }
     html, body, #app { height: 100%; margin: 0; }
-    #app { display: grid; grid-template-columns: minmax(650px, 58%) 1fr; }
+    #app { display: grid; grid-template-columns: minmax(0, 40%) minmax(0, 60%); }
     #sidebar {
       background: #f7f7f5;
       border-right: 1px solid #aaa;
@@ -108,7 +108,7 @@ def write_candidate_map(sites: gpd.GeoDataFrame, destination: Path) -> None:
       border-collapse: separate;
       border-spacing: 0;
       font-size: 12px;
-      min-width: 1000px;
+      min-width: 820px;
       width: 100%;
     }
     .candidates th {
@@ -228,15 +228,12 @@ def write_candidate_map(sites: gpd.GeoDataFrame, destination: Path) -> None:
           <th><button data-sort="score" data-type="number">Score</button></th>
           <th><button data-sort="contiguous_acres" data-type="number">Suitable ac</button></th>
           <th><button data-sort="gross_acres" data-type="number">Gross ac</button></th>
-          <th><button data-sort="reference_project_mw" data-type="number">PV MW</button></th>
-          <th><button data-sort="reference_battery_mwh" data-type="number">Battery MWh</button></th>
-          <th><button data-sort="pge_GenericPVCapacity_kW" data-type="number">Static ICA kW</button></th>
-          <th><button data-sort="pge_profile_peak_load_kw" data-type="number">Peak MW</button></th>
+          <th><button data-sort="pge_GenCapacity_kW" data-type="number">Generic ICA kW</button></th>
+          <th><button data-sort="pge_GenericPVCapacity_kW" data-type="number">PV ICA kW</button></th>
           <th><button data-sort="highway_1_side">Hwy 1 side</button></th>
           <th><button data-sort="highway_1_distance_m" data-type="number">Hwy dist m</button></th>
           <th><button data-sort="highway_1_viewshed_exposure" data-type="number">Scenic exposure</button></th>
           <th><button data-sort="highway_1_visible_length_m" data-type="number">Visible Hwy m</button></th>
-          <th><button data-sort="interconnection_path">Connection</button></th>
         </tr></thead>
         <tbody id="candidate-rows"></tbody>
       </table>
@@ -315,7 +312,8 @@ function popup(properties) {
       <tr><th>Reference system</th><td>${number(properties.reference_project_mw)} MW PV / ${number(properties.reference_battery_mwh)} MWh</td></tr>
       <tr><th>Feeder</th><td>${esc(properties.pge_FeederName)}</td></tr>
       <tr><th>Feeder peak</th><td>${number(Number(properties.pge_profile_peak_load_kw) / 1000, 2)} MW</td></tr>
-      <tr><th>Static PV ICA</th><td>${number(properties.pge_GenericPVCapacity_kW, 0)} kW</td></tr>
+      <tr><th>Generic ICA</th><td>${number(properties.pge_GenCapacity_kW, 0)} kW</td></tr>
+      <tr><th>Generic PV ICA</th><td>${number(properties.pge_GenericPVCapacity_kW, 0)} kW</td></tr>
       <tr><th>Highway 1</th><td>${esc(properties.highway_1_side)}, ${number(properties.highway_1_distance_m, 0)} m</td></tr>
       <tr><th>Scenic exposure</th><td>${number(Number(properties.highway_1_viewshed_exposure) * 100, 1)}%; visible from about ${number(properties.highway_1_visible_length_m, 0)} m of highway</td></tr>
       <tr><th>Nearest visible view</th><td>${number(properties.highway_1_nearest_visible_distance_m, 0)} m</td></tr>
@@ -358,15 +356,12 @@ for (const item of items) {
     <td class="number">${number(properties.score, 3)}</td>
     <td class="number">${number(properties.contiguous_acres)}</td>
     <td class="number">${number(properties.gross_acres)}</td>
-    <td class="number">${number(properties.reference_project_mw)}</td>
-    <td class="number">${number(properties.reference_battery_mwh)}</td>
+    <td class="number">${number(properties.pge_GenCapacity_kW, 0)}</td>
     <td class="number">${number(properties.pge_GenericPVCapacity_kW, 0)}</td>
-    <td class="number">${number(Number(properties.pge_profile_peak_load_kw) / 1000, 2)}</td>
     <td class="side-${esc(properties.highway_1_side)}">${esc(properties.highway_1_side)}</td>
     <td class="number">${number(properties.highway_1_distance_m, 0)}</td>
     <td class="number">${number(Number(properties.highway_1_viewshed_exposure) * 100, 1)}%</td>
-    <td class="number">${number(properties.highway_1_visible_length_m, 0)}</td>
-    <td>${esc(humanize(properties.interconnection_path))}</td>`;
+    <td class="number">${number(properties.highway_1_visible_length_m, 0)}</td>`;
   row.addEventListener("click", () => selectItem(item, true, false));
   item.row = row;
   rows.appendChild(row);
