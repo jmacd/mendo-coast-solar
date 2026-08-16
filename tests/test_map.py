@@ -49,6 +49,11 @@ def test_candidate_map_embeds_sites_and_zoning(tmp_path):
     assert 'data-sort="score"' in content
     assert 'data-sort="scope_anchor_fraction"' in content
     assert "Coastal Zone" in content
+    assert '<option value="RR">Rural Residential: RR</option>' in content
+    assert '<option value="RMR">Remote Residential: RMR</option>' in content
+    assert 'id="hide-west" type="checkbox" checked' in content
+    assert 'id="hide-zero-ica" type="checkbox" checked' in content
+    assert 'properties.highway_1_side === "west"' in content
     assert '"highway_1_viewshed_exposure":0.042' in content
     assert "Nearest visible view" in content
     assert 'href="downloads.html"' in content

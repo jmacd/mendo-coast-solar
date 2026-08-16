@@ -87,6 +87,20 @@ def write_candidate_map(sites: gpd.GeoDataFrame, destination: Path) -> None:
       padding: 7px 8px;
       width: 100%;
     }
+    .filter-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 16px;
+      margin-top: 8px;
+    }
+    .filter-controls label {
+      align-items: center;
+      color: #444;
+      display: flex;
+      font-size: 12px;
+      gap: 5px;
+    }
+    .filter-controls input { accent-color: #173128; margin: 0; }
     #result-summary { color: #444; font-size: 12px; margin-top: 8px; }
     #candidate-list { min-height: 0; overflow: auto; }
     table.candidates {
@@ -188,11 +202,19 @@ def write_candidate_map(sites: gpd.GeoDataFrame, destination: Path) -> None:
           <option value="focus">RR/RMR/RL/AG/Industrial</option>
           <option value="all">All zoning</option>
           <option value="residential">Residential: RR and RMR</option>
+          <option value="RR">Rural Residential: RR</option>
+          <option value="RMR">Remote Residential: RMR</option>
           <option value="RL">Rangeland: RL</option>
           <option value="AG">Agricultural: AG</option>
           <option value="I">Industrial: I</option>
           <option value="other">Other zoning</option>
         </select>
+      </div>
+      <div class="filter-controls" aria-label="Candidate exclusions">
+        <label><input id="hide-west" type="checkbox" checked>
+          Exclude west of Highway 1</label>
+        <label><input id="hide-zero-ica" type="checkbox" checked>
+          Exclude zero PV ICA</label>
       </div>
       <div id="result-summary"></div>
     </header>
@@ -413,6 +435,8 @@ function zoneMatches(zone, filter) {
 function applyFilters(fitMap = false) {
   const query = document.querySelector("#search").value.trim().toLowerCase();
   const zoneFilter = document.querySelector("#zone-filter").value;
+  const hideWest = document.querySelector("#hide-west").checked;
+  const hideZeroIca = document.querySelector("#hide-zero-ica").checked;
   const visibleLayers = [];
   for (const item of items) {
     const properties = item.feature.properties;
@@ -421,8 +445,14 @@ function applyFilters(fitMap = false) {
       properties.map_zone, labels[properties.map_zone],
       properties.pge_FeederName
     ].join(" ").toLowerCase();
+    const pvIca = Number(properties.pge_GenericPVCapacity_kW);
+    const hasZeroIca = properties.pge_GenericPVCapacity_kW !== null
+      && Number.isFinite(pvIca)
+      && pvIca === 0;
     const visible = zoneMatches(properties.map_zone, zoneFilter)
-      && (!query || text.includes(query));
+      && (!query || text.includes(query))
+      && !(hideWest && properties.highway_1_side === "west")
+      && !(hideZeroIca && hasZeroIca);
     item.row.hidden = !visible;
     if (visible && !item.visible) item.layer.addTo(map);
     if (!visible && item.visible) map.removeLayer(item.layer);
@@ -437,6 +467,8 @@ function applyFilters(fitMap = false) {
 }
 document.querySelector("#search").addEventListener("input", () => applyFilters(false));
 document.querySelector("#zone-filter").addEventListener("change", () => applyFilters(true));
+document.querySelector("#hide-west").addEventListener("change", () => applyFilters(true));
+document.querySelector("#hide-zero-ica").addEventListener("change", () => applyFilters(true));
 sortRows();
 applyFilters(true);
 if (items.length) selectItem(items[0], false, false);
