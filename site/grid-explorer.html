@@ -136,14 +136,6 @@
     }
     .candidate-detail span { color: var(--muted); }
     .candidate-detail b { font-weight: 650; overflow-wrap: anywhere; }
-    .sidebar-foot {
-      background: var(--cream);
-      border-top: 1px solid var(--line);
-      color: var(--muted);
-      font-size: 9px;
-      padding: 7px 16px;
-    }
-    .sidebar-foot a { color: var(--ink); font-weight: 700; }
     #map { min-width: 0; }
     #leaders { inset: 0; pointer-events: none; position: absolute; z-index: 4; }
     #leaders path { fill: none; stroke: #17201c; stroke-width: 1; vector-effect: non-scaling-stroke; }
@@ -203,11 +195,6 @@
         <span id="visible-count"></span>
       </div>
       <ol id="candidate-list"></ol>
-      <div class="sidebar-foot">
-        Published ICA covers primary distribution sections, not every local line.
-        <a href="grid-explorer.html" target="_blank" rel="noopener">Open full screen</a>
-        &middot; <a href="candidate-map.html" target="_blank" rel="noopener">County-wide ranking</a>
-      </div>
     </aside>
     <div id="map" aria-label="Interactive distribution grid and solar candidate map"></div>
     <svg id="leaders" aria-hidden="true"></svg>
