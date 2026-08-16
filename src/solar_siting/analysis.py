@@ -218,6 +218,41 @@ def jurisdiction_metrics(
     return acres, fractions, labels
 
 
+def inland_county_boundary(county: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+    geometry = valid_union(county.geometry)
+    if geometry.geom_type == "MultiPolygon":
+        geometry = max(geometry.geoms, key=lambda part: part.area)
+    coordinates = np.asarray(geometry.exterior.coords)
+    vertical_span = coordinates[:, 1].max() - coordinates[:, 1].min()
+    edge_band = max(vertical_span * 0.01, 1000)
+    north_candidates = np.flatnonzero(
+        coordinates[:, 1] >= coordinates[:, 1].max() - edge_band
+    )
+    south_candidates = np.flatnonzero(
+        coordinates[:, 1] <= coordinates[:, 1].min() + edge_band
+    )
+    north_index = north_candidates[
+        np.argmin(coordinates[north_candidates, 0])
+    ]
+    south_index = south_candidates[
+        np.argmin(coordinates[south_candidates, 0])
+    ]
+
+    def ring_path(start: int, end: int) -> np.ndarray:
+        if start <= end:
+            return coordinates[start : end + 1]
+        return np.vstack([coordinates[start:], coordinates[1 : end + 1]])
+
+    first = ring_path(north_index, south_index)
+    second = ring_path(south_index, north_index)[::-1]
+    inland = first if np.mean(first[:, 0]) > np.mean(second[:, 0]) else second
+    return gpd.GeoDataFrame(
+        {"COUNTY_NAME": [county.iloc[0].get("COUNTY_NAME", "Mendocino County")]},
+        geometry=[LineString(inland)],
+        crs=county.crs,
+    )
+
+
 def highway_metrics(
     sites: gpd.GeoDataFrame,
     highway: gpd.GeoDataFrame,
@@ -1298,7 +1333,9 @@ def analyze(
         pge_transmission_lines.to_crs("EPSG:4326").to_json(drop_id=True)
     )
     (output_dir / "county-boundary.geojson").write_text(
-        county_boundary.to_crs("EPSG:4326").to_json(drop_id=True)
+        inland_county_boundary(county_boundary)
+        .to_crs("EPSG:4326")
+        .to_json(drop_id=True)
     )
     (output_dir / "ranked-parcels.geojson").write_text(
         public.to_crs("EPSG:4326").to_json(drop_id=True)

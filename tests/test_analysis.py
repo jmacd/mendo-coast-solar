@@ -12,6 +12,7 @@ from solar_siting.analysis import (
     grid_accessible_parcels,
     highway_metrics,
     highway_viewshed_metrics,
+    inland_county_boundary,
     jurisdiction_metrics,
     nearest_pge_join,
     specific_yield_mwh_per_mw,
@@ -160,6 +161,23 @@ def test_jurisdiction_metrics_label_parcels_by_majority_overlap():
     np.testing.assert_allclose(acres, [1, 0.5])
     np.testing.assert_allclose(fractions, [1, 0.5])
     assert labels.tolist() == ["City of Fort Bragg", "City of Fort Bragg"]
+
+
+def test_inland_county_boundary_omits_western_edge():
+    county = gpd.GeoDataFrame(
+        {"COUNTY_NAME": ["Test County"]},
+        geometry=[box(0, 0, 100_000, 100_000)],
+        crs="EPSG:3310",
+    )
+
+    result = inland_county_boundary(county)
+    coordinates = np.asarray(result.geometry.iloc[0].coords)
+
+    assert result.iloc[0]["COUNTY_NAME"] == "Test County"
+    assert np.any(coordinates[:, 0] == 100_000)
+    assert not np.any(
+        (coordinates[:-1, 0] == 0) & (coordinates[1:, 0] == 0)
+    )
 
 
 def test_highway_metrics_classify_east_west_and_crossing():
