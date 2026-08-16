@@ -197,13 +197,14 @@ def write_candidate_map(sites: gpd.GeoDataFrame, destination: Path) -> None:
       #sidebar { border-bottom: 1px solid #888; border-right: 0; }
     }
   </style>
+  <link rel="stylesheet" href="map-theme.css">
 </head>
 <body>
 <div id="app">
-  <aside id="sidebar">
-    <header>
-      <h1>Mendocino Coast solar-storage candidates</h1>
-      <p>Sort any column. Selecting a row locates its parcel; selecting a
+  <aside id="sidebar" class="map-sidebar">
+    <header class="map-header">
+      <h1 class="map-title">Mendocino Coast solar-storage candidates</h1>
+      <p class="map-summary">Sort any column. Selecting a row locates its parcel; selecting a
       parcel highlights its row.</p>
       <div class="controls">
         <input id="search" type="search" placeholder="APN, address, feeder..."
@@ -257,6 +258,7 @@ def write_candidate_map(sites: gpd.GeoDataFrame, destination: Path) -> None:
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
   integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="map-infrastructure.js"></script>
 <script>
 const candidates = __DATA__;
 const colors = __COLORS__;
@@ -282,13 +284,6 @@ const layerControl = L.control.layers(
   { collapsed: false }
 ).addTo(map);
 
-function infrastructureTooltip(properties, fields) {
-  return fields
-    .filter(([key]) => properties[key] !== null && properties[key] !== undefined)
-    .map(([key, label]) => `<b>${esc(label)}</b>: ${esc(properties[key])}`)
-    .join("<br>");
-}
-
 async function loadInfrastructure() {
   const resources = [
     ["ica-sections.geojson", "12 kV distribution"],
@@ -308,13 +303,7 @@ async function loadInfrastructure() {
   );
   const countyLayer = L.geoJSON(county, {
     pane: "infrastructure-lines",
-    style: {
-      color: "#17201c",
-      dashArray: "8 6",
-      fill: false,
-      opacity: .9,
-      weight: 2.5
-    },
+    style: MapInfrastructure.countyStyle,
     onEachFeature: (feature, layer) => layer.bindTooltip(
       esc(feature.properties.COUNTY_NAME || "Mendocino County boundary"),
       { sticky: true }
@@ -324,43 +313,29 @@ async function loadInfrastructure() {
     pane: "infrastructure-lines",
     style: { color: "#e76f00", opacity: .58, weight: 1.35 },
     onEachFeature: (feature, layer) => layer.bindTooltip(
-      infrastructureTooltip(feature.properties, [
+      MapInfrastructure.tooltip(feature.properties, [
         ["FeederName", "Feeder"],
         ["CSV_LineSection", "Section"],
         ["GenCapacity_kW", "Generic ICA kW"],
         ["GenericPVCapacity_kW", "PV ICA kW"]
-      ]),
+      ], esc),
       { sticky: true }
     )
   }).addTo(map);
   const transmissionLayer = L.geoJSON(transmission, {
     pane: "infrastructure-lines",
-    style: feature => {
-      const voltage = Number(feature.properties.RATEDKV);
-      return {
-        color: voltage >= 230 ? "#c51b2f" : voltage >= 115 ? "#2468a2" : "#5b2c83",
-        opacity: .82,
-        weight: voltage >= 230 ? 4 : voltage >= 115 ? 3.5 : 3
-      };
-    },
+    style: MapInfrastructure.transmissionStyle,
     onEachFeature: (feature, layer) => layer.bindTooltip(
-      infrastructureTooltip(feature.properties, [
+      MapInfrastructure.tooltip(feature.properties, [
         ["TLINE_NAME", "Transmission line"],
         ["RATEDKV", "Rated kV"]
-      ]),
+      ], esc),
       { sticky: true }
     )
   }).addTo(map);
   const substationLayer = L.geoJSON(substations, {
     pane: "infrastructure-stations",
-    pointToLayer: (feature, latlng) => L.circleMarker(latlng, {
-      pane: "infrastructure-stations",
-      color: "#17201c",
-      fillColor: "#ffd447",
-      fillOpacity: .95,
-      radius: 6,
-      weight: 2
-    }),
+    pointToLayer: (feature, latlng) => MapInfrastructure.substationMarker(latlng),
     onEachFeature: (feature, layer) => {
       const properties = feature.properties;
       layer.bindTooltip(esc(properties.SubstationName || "Distribution substation"), {
@@ -368,14 +343,14 @@ async function loadInfrastructure() {
         direction: "right",
         permanent: true
       });
-      layer.bindPopup(infrastructureTooltip(properties, [
+      layer.bindPopup(MapInfrastructure.tooltip(properties, [
         ["SubstationName", "Substation"],
         ["SubstationID", "ID"],
         ["Voltage_kV", "Voltage kV"],
         ["NUMBANKS", "Banks"],
         ["Existing_DG", "Existing DG kW"],
         ["Queued_DG", "Queued DG kW"]
-      ]));
+      ], esc));
     }
   }).addTo(map);
   layerControl.addOverlay(distributionLayer, "12 kV distribution");

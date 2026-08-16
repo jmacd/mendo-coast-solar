@@ -27,3 +27,4 @@ def test_grid_explorer_loads_generated_layers_and_ranks_visible_candidates():
     assert "highway_1_side" in content
     assert "parcelCenter(feature)" in content
     assert 'id: "candidate-highlight-fill"' in content
+    assert 'href="map-theme.css"' in content

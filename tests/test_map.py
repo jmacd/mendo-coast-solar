@@ -64,6 +64,9 @@ def test_candidate_map_embeds_sites_and_zoning(tmp_path):
     assert '`Transmission (${voltages.join("/")} kV)`' in content
     assert 'layerControl.addOverlay(substationLayer, "Distribution substations")' in content
     assert 'layerControl.addOverlay(countyLayer, "Mendocino County boundary")' in content
+    assert 'href="map-theme.css"' in content
+    assert 'src="map-infrastructure.js"' in content
+    assert "MapInfrastructure.transmissionStyle" in content
     assert "Coastal Zone" in content
     assert '<option value="RR">Rural Residential: RR</option>' in content
     assert '<option value="RMR">Remote Residential: RMR</option>' in content

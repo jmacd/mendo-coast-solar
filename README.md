@@ -147,6 +147,10 @@ view. It renders a crisp vector basemap, follows pan and zoom anywhere along
 the coast, and re-ranks the best candidates in the visible region. The
 county-wide ranking remains available in `candidate-map.html`.
 
+`site/county-grid.html` uses the same published infrastructure layers and map
+theme for the landing-page county overview, replacing the former static
+transmission image.
+
 Useful output fields include:
 
 - `apn`, `FID`, `centroid_lat`, and `centroid_lon`
