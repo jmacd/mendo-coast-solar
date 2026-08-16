@@ -102,6 +102,16 @@ def write_candidate_map(sites: gpd.GeoDataFrame, destination: Path) -> None:
     }
     .filter-controls input { accent-color: #173128; margin: 0; }
     #result-summary { color: #444; font-size: 12px; margin-top: 8px; }
+    #infrastructure-status { color: #555; font-size: 11px; margin-top: 4px; }
+    .station-label {
+      background: rgba(255, 255, 255, .88);
+      border: 1px solid #444;
+      box-shadow: none;
+      color: #222;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 4px;
+    }
     #candidate-list { min-height: 0; overflow: auto; }
     table.candidates {
       background: white;
@@ -217,6 +227,7 @@ def write_candidate_map(sites: gpd.GeoDataFrame, destination: Path) -> None:
           Exclude zero PV ICA</label>
       </div>
       <div id="result-summary"></div>
+      <div id="infrastructure-status" role="status">Loading grid infrastructure...</div>
     </header>
     <main id="candidate-list">
       <table class="candidates">
@@ -253,6 +264,10 @@ const labels = __LABELS__;
 const focusZones = new Set(["AG", "FL", "TP", "RL", "I"]);
 const residentialZones = new Set(["RR", "RMR"]);
 const map = L.map("map", { preferCanvas: true });
+map.createPane("infrastructure-lines");
+map.getPane("infrastructure-lines").style.zIndex = 350;
+map.createPane("infrastructure-stations");
+map.getPane("infrastructure-stations").style.zIndex = 650;
 const imagery = L.tileLayer(
   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
   { attribution: "Imagery &copy; Esri and contributors", maxZoom: 19 }
@@ -261,11 +276,92 @@ const streets = L.tileLayer(
   "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
   { attribution: "&copy; OpenStreetMap contributors", maxZoom: 19 }
 ).addTo(map);
-L.control.layers(
+const layerControl = L.control.layers(
   { "Street map": streets, "Aerial imagery": imagery },
   null,
   { collapsed: false }
 ).addTo(map);
+
+function infrastructureTooltip(properties, fields) {
+  return fields
+    .filter(([key]) => properties[key] !== null && properties[key] !== undefined)
+    .map(([key, label]) => `<b>${esc(label)}</b>: ${esc(properties[key])}`)
+    .join("<br>");
+}
+
+async function loadInfrastructure() {
+  const resources = [
+    ["ica-sections.geojson", "12 kV distribution"],
+    ["transmission-lines.geojson", "60 kV transmission"],
+    ["distribution-substations.geojson", "Distribution substations"]
+  ];
+  const responses = await Promise.all(resources.map(([url]) => fetch(url)));
+  const failed = responses
+    .map((response, index) => response.ok ? null : resources[index][1])
+    .filter(Boolean);
+  if (failed.length) {
+    throw new Error(`Could not load ${failed.join(", ")}`);
+  }
+  const [distribution, transmission, substations] = await Promise.all(
+    responses.map(response => response.json())
+  );
+  const distributionLayer = L.geoJSON(distribution, {
+    pane: "infrastructure-lines",
+    style: { color: "#e76f00", opacity: .58, weight: 1.35 },
+    onEachFeature: (feature, layer) => layer.bindTooltip(
+      infrastructureTooltip(feature.properties, [
+        ["FeederName", "Feeder"],
+        ["CSV_LineSection", "Section"],
+        ["GenCapacity_kW", "Generic ICA kW"],
+        ["GenericPVCapacity_kW", "PV ICA kW"]
+      ]),
+      { sticky: true }
+    )
+  }).addTo(map);
+  const transmissionLayer = L.geoJSON(transmission, {
+    pane: "infrastructure-lines",
+    style: { color: "#5b2c83", opacity: .82, weight: 3 },
+    onEachFeature: (feature, layer) => layer.bindTooltip(
+      infrastructureTooltip(feature.properties, [
+        ["TLINE_NAME", "Transmission line"],
+        ["RATEDKV", "Rated kV"]
+      ]),
+      { sticky: true }
+    )
+  }).addTo(map);
+  const substationLayer = L.geoJSON(substations, {
+    pane: "infrastructure-stations",
+    pointToLayer: (feature, latlng) => L.circleMarker(latlng, {
+      pane: "infrastructure-stations",
+      color: "#17201c",
+      fillColor: "#ffd447",
+      fillOpacity: .95,
+      radius: 6,
+      weight: 2
+    }),
+    onEachFeature: (feature, layer) => {
+      const properties = feature.properties;
+      layer.bindTooltip(esc(properties.SubstationName || "Distribution substation"), {
+        className: "station-label",
+        direction: "right",
+        permanent: true
+      });
+      layer.bindPopup(infrastructureTooltip(properties, [
+        ["SubstationName", "Substation"],
+        ["SubstationID", "ID"],
+        ["Voltage_kV", "Voltage kV"],
+        ["NUMBANKS", "Banks"],
+        ["Existing_DG", "Existing DG kW"],
+        ["Queued_DG", "Queued DG kW"]
+      ]));
+    }
+  }).addTo(map);
+  layerControl.addOverlay(distributionLayer, "12 kV distribution");
+  layerControl.addOverlay(transmissionLayer, "60 kV transmission");
+  layerControl.addOverlay(substationLayer, "Distribution substations");
+  document.querySelector("#infrastructure-status").textContent =
+    `${substations.features.length} feeder substations shown`;
+}
 
 function esc(value) {
   return String(value ?? "").replace(/[&<>"']/g, character => ({
@@ -467,6 +563,9 @@ document.querySelector("#hide-zero-ica").addEventListener("change", () => applyF
 sortRows();
 applyFilters(true);
 if (items.length) selectItem(items[0], false, false);
+loadInfrastructure().catch(error => {
+  document.querySelector("#infrastructure-status").textContent = error.message;
+});
 </script>
 </body>
 </html>

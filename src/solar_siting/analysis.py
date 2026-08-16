@@ -696,6 +696,12 @@ def analyze(
     pge_feeders = gpd.read_file(
         data_dir / sources["pge_feeders"]["filename"]
     ).to_crs(crs)
+    pge_distribution_substations = gpd.read_file(
+        data_dir / sources["pge_distribution_substations"]["filename"]
+    ).to_crs(crs)
+    pge_transmission_lines = gpd.read_file(
+        data_dir / sources["pge_transmission_lines"]["filename"]
+    ).to_crs(crs)
 
     bounds_geometry = gpd.GeoSeries(
         [box(*config["area"]["bbox"])],
@@ -1281,6 +1287,12 @@ def analyze(
     )
     (output_dir / "distribution-grid.geojson").write_text(
         anchor_grid.to_crs("EPSG:4326").to_json(drop_id=True)
+    )
+    (output_dir / "distribution-substations.geojson").write_text(
+        pge_distribution_substations.to_crs("EPSG:4326").to_json(drop_id=True)
+    )
+    (output_dir / "transmission-lines.geojson").write_text(
+        pge_transmission_lines.to_crs("EPSG:4326").to_json(drop_id=True)
     )
     (output_dir / "ranked-parcels.geojson").write_text(
         public.to_crs("EPSG:4326").to_json(drop_id=True)

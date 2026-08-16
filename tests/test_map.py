@@ -56,6 +56,12 @@ def test_candidate_map_embeds_sites_and_zoning(tmp_path):
     assert 'data-sort="pge_profile_peak_load_kw"' not in content
     assert 'data-sort="interconnection_path"' not in content
     assert "minmax(0, 40%) minmax(0, 60%)" in content
+    assert '["ica-sections.geojson", "12 kV distribution"]' in content
+    assert '["transmission-lines.geojson", "60 kV transmission"]' in content
+    assert '"distribution-substations.geojson"' in content
+    assert 'layerControl.addOverlay(distributionLayer, "12 kV distribution")' in content
+    assert 'layerControl.addOverlay(transmissionLayer, "60 kV transmission")' in content
+    assert 'layerControl.addOverlay(substationLayer, "Distribution substations")' in content
     assert "Coastal Zone" in content
     assert '<option value="RR">Rural Residential: RR</option>' in content
     assert '<option value="RMR">Remote Residential: RMR</option>' in content

@@ -132,6 +132,31 @@ fields = [
 filename = "pge-feeders.geojson"
 required = true
 
+[sources.pge_distribution_substations]
+kind = "arcgis-vector"
+url = "https://services2.arcgis.com/mJaJSax0KPHoCNB6/ArcGIS/rest/services/DRPComplianceRelProd/FeatureServer/0"
+where = "Publish = 1"
+fields = [
+  "OBJECTID",
+  "SubstationName",
+  "SubstationID",
+  "Voltage_kV",
+  "NUMBANKS",
+  "Existing_DG",
+  "Queued_DG",
+  "Total_DG",
+]
+filename = "pge-distribution-substations.geojson"
+required = true
+
+[sources.pge_transmission_lines]
+kind = "arcgis-vector"
+url = "https://services2.arcgis.com/mJaJSax0KPHoCNB6/ArcGIS/rest/services/DRPComplianceRelProd/FeatureServer/5"
+where = "RATEDKV = 60 AND Publish = 1"
+fields = ["OBJECTID", "TLINE_NAME", "RATEDKV", "Last_Update_On_Map"]
+filename = "pge-transmission-lines.geojson"
+required = true
+
 [sources.pge_load_profiles]
 kind = "arcgis-related-table"
 url = "https://services2.arcgis.com/mJaJSax0KPHoCNB6/ArcGIS/rest/services/DRPComplianceRelProd/FeatureServer/23"
