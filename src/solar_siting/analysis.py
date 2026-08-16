@@ -13,7 +13,7 @@ import shapely
 from rasterio.features import geometry_mask, geometry_window
 from rasterio.warp import Resampling, reproject
 from scipy import ndimage
-from shapely.geometry import box, mapping
+from shapely.geometry import LineString, box, mapping
 
 from .map import write_candidate_map
 
@@ -223,6 +223,7 @@ def highway_metrics(
     highway: gpd.GeoDataFrame,
 ) -> tuple[np.ndarray, list[str], np.ndarray]:
     highway_geometry = valid_union(highway.geometry)
+    highway_bounds = highway_geometry.bounds
     distances = sites.geometry.distance(highway_geometry).to_numpy(dtype=float)
     sides = []
     east_scores = []
@@ -232,10 +233,23 @@ def highway_metrics(
             east_scores.append(0.5)
             continue
         centroid = geometry.centroid
-        nearest_line = shapely.shortest_line(centroid, highway_geometry)
-        coordinates = shapely.get_coordinates(nearest_line)
-        highway_point = coordinates[-1]
-        if centroid.x < highway_point[0]:
+        latitude_line = LineString(
+            [
+                (highway_bounds[0] - 1, centroid.y),
+                (highway_bounds[2] + 1, centroid.y),
+            ]
+        )
+        crossings = shapely.get_coordinates(
+            highway_geometry.intersection(latitude_line)
+        )
+        if len(crossings):
+            highway_x = crossings[
+                np.argmin(np.abs(crossings[:, 0] - centroid.x))
+            ][0]
+        else:
+            nearest_line = shapely.shortest_line(centroid, highway_geometry)
+            highway_x = shapely.get_coordinates(nearest_line)[-1][0]
+        if centroid.x < highway_x:
             sides.append("west")
             east_scores.append(0.0)
         else:

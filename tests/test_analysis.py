@@ -183,6 +183,22 @@ def test_highway_metrics_classify_east_west_and_crossing():
     np.testing.assert_allclose(scores, [0, 1, 0.5])
 
 
+def test_highway_metrics_compare_side_at_site_latitude():
+    sites = gpd.GeoDataFrame(
+        geometry=[box(-1, 9, 1, 11)],
+        crs="EPSG:3310",
+    )
+    highway = gpd.GeoDataFrame(
+        geometry=[LineString([(10, 10), (-5, 0)])],
+        crs=sites.crs,
+    )
+
+    _, sides, scores = highway_metrics(sites, highway)
+
+    assert sides == ["west"]
+    np.testing.assert_allclose(scores, [0])
+
+
 def test_terrain_line_visible_detects_blocking_ridge():
     transform = from_origin(0, 5, 1, 1)
     elevation = np.zeros((5, 5), dtype=float)
