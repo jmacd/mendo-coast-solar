@@ -292,7 +292,7 @@ function infrastructureTooltip(properties, fields) {
 async function loadInfrastructure() {
   const resources = [
     ["ica-sections.geojson", "12 kV distribution"],
-    ["transmission-lines.geojson", "60 kV transmission"],
+    ["transmission-lines.geojson", "Transmission network"],
     ["distribution-substations.geojson", "Distribution substations"]
   ];
   const responses = await Promise.all(resources.map(([url]) => fetch(url)));
@@ -320,7 +320,14 @@ async function loadInfrastructure() {
   }).addTo(map);
   const transmissionLayer = L.geoJSON(transmission, {
     pane: "infrastructure-lines",
-    style: { color: "#5b2c83", opacity: .82, weight: 3 },
+    style: feature => {
+      const voltage = Number(feature.properties.RATEDKV);
+      return {
+        color: voltage >= 230 ? "#c51b2f" : voltage >= 115 ? "#2468a2" : "#5b2c83",
+        opacity: .82,
+        weight: voltage >= 230 ? 4 : voltage >= 115 ? 3.5 : 3
+      };
+    },
     onEachFeature: (feature, layer) => layer.bindTooltip(
       infrastructureTooltip(feature.properties, [
         ["TLINE_NAME", "Transmission line"],
@@ -357,7 +364,13 @@ async function loadInfrastructure() {
     }
   }).addTo(map);
   layerControl.addOverlay(distributionLayer, "12 kV distribution");
-  layerControl.addOverlay(transmissionLayer, "60 kV transmission");
+  const voltages = [...new Set(
+    transmission.features.map(feature => Number(feature.properties.RATEDKV))
+  )].filter(Number.isFinite).sort((left, right) => left - right);
+  layerControl.addOverlay(
+    transmissionLayer,
+    `Transmission (${voltages.join("/")} kV)`
+  );
   layerControl.addOverlay(substationLayer, "Distribution substations");
   document.querySelector("#infrastructure-status").textContent =
     `${substations.features.length} feeder substations shown`;

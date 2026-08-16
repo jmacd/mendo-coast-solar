@@ -152,7 +152,10 @@ required = true
 [sources.pge_transmission_lines]
 kind = "arcgis-vector"
 url = "https://services2.arcgis.com/mJaJSax0KPHoCNB6/ArcGIS/rest/services/DRPComplianceRelProd/FeatureServer/5"
-where = "RATEDKV = 60 AND Publish = 1"
+where = "Publish = 1"
+# Extend east only for transmission context so the coastal 60 kV network's
+# connections to the 115 and 230 kV system remain visible.
+bbox = [-124.15, 38.7, -122.5, 40.1]
 fields = ["OBJECTID", "TLINE_NAME", "RATEDKV", "Last_Update_On_Map"]
 filename = "pge-transmission-lines.geojson"
 required = true

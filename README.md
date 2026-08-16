@@ -106,7 +106,7 @@ This preserves the original assumptions for comparison.
 | `output/ica-sections.geojson` | Published PG&E ICA sections for the grid explorer |
 | `output/distribution-grid.geojson` | Coast-serving feeder geometry for the grid explorer |
 | `output/distribution-substations.geojson` | Published PG&E distribution-substation points |
-| `output/transmission-lines.geojson` | Published PG&E 60 kV transmission lines |
+| `output/transmission-lines.geojson` | Published PG&E 60, 115, and 230 kV transmission lines |
 | `output/distribution-ready-parcels.*` | Subset with at least 500 kW of static PV ICA |
 | `output/screened-parcels.csv` | All analyzed parcels, including failed gates |
 | `output/screened-parcels.geojson` | Screened parcel geometry and diagnostics |
@@ -226,7 +226,7 @@ The manifest currently retrieves:
 - California Energy Commission transmission lines
 - Caltrans State Highway Network Route 1 geometry
 - PG&E distribution ICA line sections
-- PG&E distribution substations and published 60 kV transmission lines
+- PG&E distribution substations and published transmission lines
 - PG&E feeder summaries and monthly-hour load profiles
 - USGS 3DEP elevation
 - USGS/MRLC NLCD 2021 land cover
