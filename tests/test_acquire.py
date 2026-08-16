@@ -85,3 +85,30 @@ def test_fetch_all_refreshes_vector_missing_cache_fields(tmp_path, monkeypatch):
     fetch_all(config, tmp_path)
 
     assert calls == [destination]
+
+
+def test_fetch_all_uses_source_specific_bbox(tmp_path, monkeypatch):
+    seen_bbox = None
+
+    def fetch(session, source, bbox, path):
+        nonlocal seen_bbox
+        seen_bbox = bbox
+        path.write_text('{"type":"FeatureCollection","features":[]}')
+        return {"feature_count": 0}
+
+    monkeypatch.setattr("solar_siting.acquire.fetch_arcgis_vector", fetch)
+    config = {
+        "area": {"name": "Test", "bbox": [0, 0, 1, 1]},
+        "sources": {
+            "transmission": {
+                "kind": "arcgis-vector",
+                "url": "https://example.test/transmission",
+                "filename": "transmission.geojson",
+                "bbox": [-1, -2, 3, 4],
+            }
+        },
+    }
+
+    fetch_all(config, tmp_path)
+
+    assert seen_bbox == [-1, -2, 3, 4]

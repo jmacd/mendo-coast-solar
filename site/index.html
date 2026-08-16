@@ -23,17 +23,17 @@
       <div class="hero-copy">
         <h1>Where could grid-scale solar work on the Mendocino Coast?</h1>
         <p class="lede">
-          A solar developer approached Caspar Water Company interested in a
-          lease on its field near Highway 1. We learned that interconnection
-          capacity is a major obstacle for new solar developments. What does
-          that tell us about site suitability? We learned that Mendocino
-          Coastal ordinances do not permit grid-scale solar in residential
-          zones<sup>*</sup>.</p>
+          A solar developer approached Caspar Water Company interested
+          in a lease on its field near Highway 1. We learned that
+          interconnection capacity is a major obstacle for new solar
+          developments. What does that tell us about site suitability?
+          We learned that Mendocino Coastal zoning codes do not permit
+          grid-scale solar in residential zones<sup>*</sup>.</p>
         <div class="actions">
           <a class="button primary" href="candidate-map.html">Open the map</a>
           <a class="button secondary" href="downloads.html">Explore the data</a>
         </div>
-        <p class="caveat"><sup>*</sup>Mendocino Co. Ordinance 3857 states otherwise</p>
+        <p class="caveat"><sup>*</sup>See below</p>
       </div>
       <div class="hero-art" aria-hidden="true">
         <div class="sun"></div>
@@ -76,10 +76,8 @@
         </div>
       </div>
       <div class="transmission-layout">
-        <img class="grid-map" src="transmission-map.svg"
-          alt="Map showing the long Mendocino Coast transmission
-          network and its few connections toward the wider inland
-          grid.">
+        <iframe class="county-grid-frame" src="county-grid.html"
+          title="Interactive map of Mendocino County transmission lines and feeder substations"></iframe>
         <div class="finding-grid">
           <article>
             <h3>Transmission costs</h3>
@@ -174,8 +172,8 @@
             <p>Published ICA numbers are based on a variety of factors
               indicating how much power can be safely introduced
               without overloading the system. There are actually two
-              ICA numbers, one for always-on facilities and one for
-              solar-only generation. Facilities have to limit
+              ICA numbers, one for generation facilities and one for
+              solar-only facilities. Facilities have to limit
               generation to comply with the utility.
             </p>
           </article>
@@ -184,9 +182,10 @@
             <p>The ICA number limits what a generation facility can
               produce at the peak, while sunshine limits energy
               generation to approximately 20% of the day in the
-              Coastal zone. Adding battery storage to the solar
-              facility overcomes these limits, allowing a larger
-              facility to generate throughout the day.
+              Coastal zone. Adding battery storage enables a solar
+              system to deliver energy around the clock. A site with
+              100kW generation ICA and battery storage can support a
+              500kW solar array.
             </p>
           </article>
         </div>
@@ -195,115 +194,58 @@
 
     <section id="method" class="section method">
       <div class="section-heading">
-        <p class="eyebrow">How the analysis works</p>
-        <h2>A funnel, not a black box</h2>
-        <p>Hard screens establish whether a site is a plausible candidate.
-          A weighted score then compares candidates that remain.</p>
-      </div>
-      <img class="wide-graphic" src="analysis-pipeline.svg"
-        alt="Analysis pipeline from public data through exclusions, terrain and grid analysis to 208 ranked candidates.">
-
-      <div class="method-grid">
-        <article>
-          <span class="step">01</span>
-          <h3>Define usable land</h3>
-          <p>Select full parcels near coast-serving distribution feeders,
-            remove wetlands and selected protected or important farmland, and
-            retain planning jurisdiction while excluding County Open Space
-            zoning.</p>
-        </article>
-        <article>
-          <span class="step">02</span>
-          <h3>Measure the terrain</h3>
-          <p>Find the largest connected area with open land cover and slope no
-            greater than 10 degrees. A candidate needs at least 10 contiguous acres.</p>
-        </article>
-        <article>
-          <span class="step">03</span>
-          <h3>Connect land to the grid</h3>
-          <p>Require a three-phase PG&amp;E section within one kilometer, then
-            report feeder demand, static hosting capacity, and nearby transmission.</p>
-        </article>
-        <article>
-          <span class="step">04</span>
-          <h3>Test community fit</h3>
-          <p>Compare local residential and evening demand, development intensity,
-            solar resource, industrial reuse, and modeled visibility from Highway 1.</p>
-        </article>
+        <p class="eyebrow">Motivation</p>
+        <h2>Why we made this site.</h2>
+        <p>
+          This site began as a question about land use. During the
+          first attempt to develop solar on the Caspar Water company
+          site, the Mendocino County Planning department discovered a
+          discrepancy in its books. The County's General Plan section
+          20.376.015 says solar facilities can be built in Coastal
+          Rural Residential zones, codified by Ordinance 3857 in May
+          1993. The Coastal Plan, which takes precedence, does not
+          include this provision.
+        </p>
+        <p>
+          The Department has to weigh the impact of changing its lsit
+          of Coastal Civic Conditional Uses for Rural Residential
+          districts. Otherwise, the Coastal Plan only permits solar
+          development in Agricultural, Forest Land, Timber Production,
+          Rangeland, and Industrial zones. We have to ask, what would
+          be the impact of this change? Would the Mendocino Coast be
+          suddenly covered with solar panels? Or, as we believe, would
+          this help to preserve rural communities through new investment?
+        </p>
       </div>
     </section>
 
-    <section class="section score-section">
+    <section id="method" class="section method">
       <div class="section-heading">
-        <p class="eyebrow">The scoring function</p>
-        <h2>What the ranking values</h2>
-        <p>Each component is normalized from 0 to 1 and multiplied by its
-          published weight. The weights sum to 100%.</p>
-      </div>
-      <div class="score-layout">
-        <div class="score-bars" role="img" aria-label="Scoring categories: land 35 percent, local demand 32 percent, low highway visibility 15 percent, grid access 11 percent, and solar resource 7 percent.">
-          <div class="bar-row"><span>Land suitability</span><div class="bar"><i style="width:35%"></i></div><strong>35%</strong></div>
-          <div class="bar-row"><span>Local demand</span><div class="bar"><i style="width:32%"></i></div><strong>32%</strong></div>
-          <div class="bar-row"><span>Low highway visibility</span><div class="bar"><i style="width:15%"></i></div><strong>15%</strong></div>
-          <div class="bar-row"><span>Grid access</span><div class="bar"><i style="width:11%"></i></div><strong>11%</strong></div>
-          <div class="bar-row"><span>Solar resource</span><div class="bar"><i style="width:7%"></i></div><strong>7%</strong></div>
-        </div>
-        <div class="score-detail">
-          <h3>Exact components</h3>
-          <dl>
-            <div><dt>Land · 35%</dt><dd>Contiguous land 10, flatness 5, open cover 3,
-              undeveloped land 10, industrial reuse 7</dd></div>
-            <div><dt>Demand · 32%</dt><dd>Residential customers 16, evening feeder peak 16</dd></div>
-            <div><dt>Scenic · 15%</dt><dd>Low modeled Highway 1 exposure 15</dd></div>
-            <div><dt>Grid · 11%</dt><dd>Distribution proximity 8, static ICA 2,
-              transmission proximity 1</dd></div>
-            <div><dt>Sun · 7%</dt><dd>NASA POWER solar climatology 7</dd></div>
-          </dl>
-        </div>
-      </div>
-      <aside class="note"><strong>Why static ICA is only 2%:</strong> PG&amp;E’s
-        Integration Capacity Analysis (ICA) estimates additional instantaneous
-        export a distribution section may accommodate under modeled conditions.
-        “PV” means photovoltaic. ICA is not a measure of local demand, unused
-        wire capacity, panel nameplate, or daily energy. Batteries, export
-        controls, curtailment, upgrades, and transmission interconnection can
-        change the feasible project design.</aside>
-    </section>
+        <p class="eyebrow">Analysis</p>
+        <h2>What we learned about solar on the Mendocino coast.</h2>
+        <p>
+          To develop a grid-scale solar facility on the Mendocino
+          coast requires more than zoning. Successful development
+          requires at least 10 acres of undeveloped land, access to
+          the local high-voltage grid, that the local distribution
+          grid has capacity, and that there is sufficient demand for
+          electricity nearby. As soon as one generation facility is
+          installed in a location, capacity and demand constraints
+          will prevent another facility from being built nearby.
+        </p>
 
-    <section id="grid" class="section grid-section">
-      <div class="section-heading">
-        <p class="eyebrow">How the coastal grid works</p>
-        <h2>Power, energy, and the wires are different constraints</h2>
-        <p>The diagram shows the two interconnection paths considered by the
-          study and why storage matters on a coast where demand peaks after sunset.</p>
-      </div>
-      <img class="wide-graphic grid-graphic" src="grid-diagram.svg"
-        alt="Diagram showing solar and battery connecting to a 12 kilovolt distribution feeder serving homes through a substation, with a separate possible connection to a 60 kilovolt transmission line.">
-      <div class="grid-explainers">
-        <article>
-          <h3>12 kV distribution</h3>
-          <p>Neighborhood feeders deliver power from a substation to homes.
-            A solar project can connect locally, but voltage, conductors,
-            protection, reverse flow, and shared upstream equipment can limit export.</p>
-        </article>
-        <article>
-          <h3>Static ICA</h3>
-          <p>PG&amp;E’s Integration Capacity Analysis estimates additional
-            instantaneous generation a line section may accept without identified
-            upgrades. It is a planning screen, not permission to interconnect.</p>
-        </article>
-        <article>
-          <h3>Solar plus storage</h3>
-          <p>A 1 MW array might generate roughly 5 MWh on a good day. A battery
-            can absorb daytime production, smooth cloud variation, serve evening
-            load, and keep export within an approved limit.</p>
-        </article>
-        <article>
-          <h3>60 kV transmission</h3>
-          <p>A nearby transmission line may offer a separate path, but proximity
-            does not prove capacity. It can require a project substation, switching,
-            protection, easements, and a formal system-impact study.</p>
-        </article>
+
+
+        <p>
+          Grid-scale solar is already permitted in a number of Coastal
+          zones, so we could ask why none have been built.
+
+        </p>
+
+
+        When the preconditions are met, CEQA analysis will be required
+          &mdash; and setbacks for ESHAs &mdash; before a seeking a
+          Conditional Use permit.
       </div>
     </section>
 

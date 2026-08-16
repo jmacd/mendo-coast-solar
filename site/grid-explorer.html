@@ -64,6 +64,21 @@
     }
     .swatch { display: inline-block; flex: 0 0 22px; height: 7px; }
     .zone { height: 10px; }
+    .filters {
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px 14px;
+      padding: 8px 16px;
+    }
+    .filters label {
+      align-items: center;
+      color: var(--muted);
+      display: flex;
+      font-size: 9px;
+      gap: 5px;
+    }
+    .filters input { accent-color: var(--ink); margin: 0; }
     .candidate-heading {
       align-items: baseline;
       display: flex;
@@ -121,17 +136,10 @@
     }
     .candidate-detail span { color: var(--muted); }
     .candidate-detail b { font-weight: 650; overflow-wrap: anywhere; }
-    .sidebar-foot {
-      background: var(--cream);
-      border-top: 1px solid var(--line);
-      color: var(--muted);
-      font-size: 9px;
-      padding: 7px 16px;
-    }
-    .sidebar-foot a { color: var(--ink); font-weight: 700; }
     #map { min-width: 0; }
     #leaders { inset: 0; pointer-events: none; position: absolute; z-index: 4; }
     #leaders path { fill: none; stroke: #17201c; stroke-width: 1; vector-effect: non-scaling-stroke; }
+    #leaders circle { fill: var(--cream); stroke: #17201c; stroke-width: 1.5; }
     #status {
       background: var(--cream);
       border-radius: 8px;
@@ -151,13 +159,14 @@
       .legend-zoning { display: none; }
     }
   </style>
+  <link rel="stylesheet" href="map-theme.css">
 </head>
 <body>
   <main id="app">
-    <aside id="sidebar">
-      <div class="sidebar-head">
-        <h1>Coastal distribution grid</h1>
-        <p class="summary">Pan and zoom to re-rank candidates in the local view.</p>
+    <aside id="sidebar" class="map-sidebar">
+      <div class="sidebar-head map-header">
+        <h1 class="map-title">Coastal distribution grid</h1>
+        <p class="summary map-summary">Pan and zoom to re-rank candidates in the local view.</p>
       </div>
       <div class="legends">
         <section class="legend">
@@ -175,16 +184,17 @@
           <div class="key"><i class="swatch zone" style="background:#8c6d31"></i>Rangeland</div>
         </section>
       </div>
+      <div class="filters" aria-label="Candidate filters">
+        <label><input id="hide-west" type="checkbox" checked>
+          Hide west of Highway 1</label>
+        <label><input id="hide-zero-ica" type="checkbox" checked>
+          Hide zero PV ICA</label>
+      </div>
       <div class="candidate-heading">
         <h2>Best candidates in view</h2>
         <span id="visible-count"></span>
       </div>
       <ol id="candidate-list"></ol>
-      <div class="sidebar-foot">
-        Published ICA covers primary distribution sections, not every local line.
-        <a href="grid-explorer.html" target="_blank" rel="noopener">Open full screen</a>
-        &middot; <a href="candidate-map.html" target="_blank" rel="noopener">County-wide ranking</a>
-      </div>
     </aside>
     <div id="map" aria-label="Interactive distribution grid and solar candidate map"></div>
     <svg id="leaders" aria-hidden="true"></svg>
@@ -211,6 +221,8 @@
     const leaders = document.querySelector("#leaders");
     const status = document.querySelector("#status");
     const visibleCount = document.querySelector("#visible-count");
+    const hideWest = document.querySelector("#hide-west");
+    const hideZeroIca = document.querySelector("#hide-zero-ica");
     let candidates = [];
     let displayed = [];
     let visibleCandidates = [];
@@ -270,19 +282,41 @@
       return extent[0] <= bounds.getEast() && extent[2] >= bounds.getWest()
         && extent[1] <= bounds.getNorth() && extent[3] >= bounds.getSouth();
     }
-    function westernAnchor(feature) {
-      const points = allCoordinates(feature.geometry).map(coordinate => ({
-        coordinate,
-        point: map.project(coordinate)
-      }));
-      const west = Math.min(...points.map(item => item.point.x));
-      const western = points.filter(item => item.point.x <= west + .75);
-      return {
-        coordinate: western[0].coordinate,
-        point: {
-          x: west,
-          y: western.reduce((sum, item) => sum + item.point.y, 0) / western.length
+    function parcelCenter(feature) {
+      const polygons = feature.geometry.type === "Polygon"
+        ? [feature.geometry.coordinates]
+        : feature.geometry.coordinates;
+      let weightedX = 0;
+      let weightedY = 0;
+      let totalWeight = 0;
+      for (const polygon of polygons) {
+        const points = polygon[0].map(coordinate => map.project(coordinate));
+        let crossSum = 0;
+        let centerX = 0;
+        let centerY = 0;
+        for (let index = 0; index < points.length - 1; index += 1) {
+          const left = points[index];
+          const right = points[index + 1];
+          const cross = left.x * right.y - right.x * left.y;
+          crossSum += cross;
+          centerX += (left.x + right.x) * cross;
+          centerY += (left.y + right.y) * cross;
         }
+        if (Math.abs(crossSum) < 1e-9) continue;
+        const weight = Math.abs(crossSum);
+        weightedX += centerX / (3 * crossSum) * weight;
+        weightedY += centerY / (3 * crossSum) * weight;
+        totalWeight += weight;
+      }
+      if (totalWeight) {
+        return { point: { x: weightedX / totalWeight, y: weightedY / totalWeight } };
+      }
+      const extent = feature._bounds;
+      return {
+        point: map.project([
+          (extent[0] + extent[2]) / 2,
+          (extent[1] + extent[3]) / 2
+        ])
       };
     }
     function candidateColor(properties) {
@@ -291,6 +325,47 @@
     }
     function candidateId(feature) {
       return String(feature.properties.site_apns);
+    }
+    function passesCandidateFilters(feature) {
+      const properties = feature.properties;
+      if (hideWest.checked && clean(properties.highway_1_side).toLowerCase() === "west") {
+        return false;
+      }
+      const pvIca = Number(properties.pge_GenericPVCapacity_kW);
+      return !(hideZeroIca.checked
+        && properties.pge_GenericPVCapacity_kW !== null
+        && Number.isFinite(pvIca)
+        && pvIca === 0);
+    }
+    function candidateMapFilter() {
+      const conditions = ["all"];
+      if (hideWest.checked) {
+        conditions.push(["!=", ["get", "highway_1_side"], "west"]);
+      }
+      if (hideZeroIca.checked) {
+        conditions.push([
+          "!=",
+          ["coalesce", ["get", "pge_GenericPVCapacity_kW"], -1],
+          0
+        ]);
+      }
+      return conditions;
+    }
+    function updateMapCandidates() {
+      const filter = candidateMapFilter();
+      for (const layer of ["candidate-fill", "candidate-outline"]) {
+        if (map.getLayer(layer)) map.setFilter(layer, filter);
+      }
+      const highlighted = {
+        type: "FeatureCollection",
+        features: displayed.map(item => item.feature)
+      };
+      map.getSource("candidate-highlights")?.setData(highlighted);
+      const active = candidates.find(feature => candidateId(feature) === activeApn);
+      map.getSource("candidate-active")?.setData({
+        type: "FeatureCollection",
+        features: active ? [active] : []
+      });
     }
     function candidateDetailHtml(properties) {
       const zone = clean(properties.BASEZONE) || "Unclassified";
@@ -314,7 +389,7 @@
         .map(feature => ({
           feature,
           localRank: visibleCandidates.indexOf(feature) + 1,
-          anchor: westernAnchor(feature)
+          anchor: parcelCenter(feature)
         }))
         .sort((left, right) => left.anchor.point.y - right.anchor.point.y);
       visibleCount.textContent = `${best.length} of ${visibleCandidates.length}`;
@@ -357,6 +432,7 @@
         }
         list.append(row);
       }
+      updateMapCandidates();
       requestAnimationFrame(() => {
         activeRow?.scrollIntoView({ block: "nearest" });
         drawLeaders();
@@ -367,6 +443,7 @@
       const bounds = map.getBounds();
       visibleCandidates = candidates
         .filter(feature => intersectsView(feature, bounds))
+        .filter(passesCandidateFilters)
         .sort((left, right) => Number(right.properties.score) - Number(left.properties.score));
       if (!visibleCandidates.some(feature => candidateId(feature) === activeApn)) {
         activeApn = null;
@@ -382,7 +459,7 @@
       const routeX = mapRect.left - appRect.left + 12;
       [...list.children].forEach((row, index) => {
         const rowRect = row.querySelector(".candidate").getBoundingClientRect();
-        const anchor = westernAnchor(displayed[index].feature).point;
+        const anchor = parcelCenter(displayed[index].feature).point;
         const startX = rowRect.right - appRect.left;
         const startY = rowRect.top + rowRect.height / 2 - appRect.top;
         const targetX = mapRect.left - appRect.left + anchor.x;
@@ -395,6 +472,11 @@
           `L${targetX.toFixed(1)},${targetY.toFixed(1)}`
         );
         leaders.append(path);
+        const marker = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        marker.setAttribute("cx", targetX.toFixed(1));
+        marker.setAttribute("cy", targetY.toFixed(1));
+        marker.setAttribute("r", "3");
+        leaders.append(marker);
       });
     }
     function addDataLayers(ica, grid, candidateData) {
@@ -442,13 +524,45 @@
         id: "candidate-fill",
         type: "fill",
         source: "candidates",
-        paint: { "fill-color": zoneExpression, "fill-opacity": .34 }
+        paint: { "fill-color": zoneExpression, "fill-opacity": .12 }
       });
       map.addLayer({
         id: "candidate-outline",
         type: "line",
         source: "candidates",
-        paint: { "line-color": zoneExpression, "line-width": 2.5 }
+        paint: { "line-color": zoneExpression, "line-opacity": .45, "line-width": 1 }
+      });
+      map.addSource("candidate-highlights", {
+        type: "geojson",
+        data: { type: "FeatureCollection", features: [] }
+      });
+      map.addLayer({
+        id: "candidate-highlight-fill",
+        type: "fill",
+        source: "candidate-highlights",
+        paint: { "fill-color": zoneExpression, "fill-opacity": .52 }
+      });
+      map.addLayer({
+        id: "candidate-highlight-outline",
+        type: "line",
+        source: "candidate-highlights",
+        paint: { "line-color": zoneExpression, "line-width": 2.75 }
+      });
+      map.addSource("candidate-active", {
+        type: "geojson",
+        data: { type: "FeatureCollection", features: [] }
+      });
+      map.addLayer({
+        id: "candidate-active-fill",
+        type: "fill",
+        source: "candidate-active",
+        paint: { "fill-color": zoneExpression, "fill-opacity": .72 }
+      });
+      map.addLayer({
+        id: "candidate-active-outline",
+        type: "line",
+        source: "candidate-active",
+        paint: { "line-color": "#17201c", "line-width": 4 }
       });
       map.on("click", "candidate-fill", event => {
         const selected = candidates.find(
@@ -483,6 +597,8 @@
     map.on("moveend", updateVisibleCandidates);
     map.on("resize", () => requestAnimationFrame(drawLeaders));
     list.addEventListener("scroll", drawLeaders);
+    hideWest.addEventListener("change", updateVisibleCandidates);
+    hideZeroIca.addEventListener("change", updateVisibleCandidates);
     new ResizeObserver(() => {
       map.resize();
       drawLeaders();

@@ -24,6 +24,7 @@ def test_candidate_map_embeds_sites_and_zoning(tmp_path):
             "pge_FeederName": ["TEST 1101"],
             "pge_ResCust": [100],
             "pge_profile_peak_load_kw": [500],
+            "pge_GenCapacity_kW": [175],
             "pge_GenericPVCapacity_kW": [250],
             "highway_1_side": ["east"],
             "highway_1_distance_m": [58],
@@ -48,7 +49,32 @@ def test_candidate_map_embeds_sites_and_zoning(tmp_path):
     assert "selectItem(item" in content
     assert 'data-sort="score"' in content
     assert 'data-sort="scope_anchor_fraction"' in content
+    assert 'data-sort="pge_GenCapacity_kW"' in content
+    assert 'data-sort="pge_GenericPVCapacity_kW"' in content
+    assert 'data-sort="reference_project_mw"' not in content
+    assert 'data-sort="reference_battery_mwh"' not in content
+    assert 'data-sort="pge_profile_peak_load_kw"' not in content
+    assert 'data-sort="interconnection_path"' not in content
+    assert "minmax(0, 40%) minmax(0, 60%)" in content
+    assert '["ica-sections.geojson", "12 kV distribution"]' in content
+    assert '["transmission-lines.geojson", "Transmission network"]' in content
+    assert '"distribution-substations.geojson"' in content
+    assert '"county-boundary.geojson"' in content
+    assert 'layerControl.addOverlay(distributionLayer, "12 kV distribution")' in content
+    assert '`Transmission (${voltages.join("/")} kV)`' in content
+    assert 'layerControl.addOverlay(substationLayer, "Distribution substations")' in content
+    assert 'layerControl.addOverlay(countyLayer, "Mendocino County boundary")' in content
+    assert 'href="map-theme.css"' in content
+    assert 'src="map-infrastructure.js"' in content
+    assert "MapInfrastructure.transmissionStyle" in content
     assert "Coastal Zone" in content
+    assert '<option value="RR">Rural Residential: RR</option>' in content
+    assert '<option value="RMR">Remote Residential: RMR</option>' in content
+    assert '<option value="focus">AG/FL/TP/RL/I</option>' in content
+    assert 'new Set(["AG", "FL", "TP", "RL", "I"])' in content
+    assert 'id="hide-west" type="checkbox" checked' in content
+    assert 'id="hide-zero-ica" type="checkbox" checked' in content
+    assert 'properties.highway_1_side === "west"' in content
     assert '"highway_1_viewshed_exposure":0.042' in content
     assert "Nearest visible view" in content
     assert 'href="downloads.html"' in content

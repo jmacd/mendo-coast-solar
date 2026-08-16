@@ -12,6 +12,7 @@ from solar_siting.analysis import (
     grid_accessible_parcels,
     highway_metrics,
     highway_viewshed_metrics,
+    inland_county_boundary,
     jurisdiction_metrics,
     nearest_pge_join,
     specific_yield_mwh_per_mw,
@@ -40,22 +41,22 @@ def test_specific_yield_has_physical_units():
     assert result == pytest.approx(1365.465)
 
 
-def test_candidate_sites_combine_adjacent_industrial_parcels():
+def test_candidate_sites_combine_sections_with_same_apn_only():
     side = (6 * ACRE_M2) ** 0.5
     parcels = gpd.GeoDataFrame(
         {
-            "APNFULL": ["100", "200", "300"],
+            "APNFULL": ["100", "100", "200"],
             "FID": [1, 2, 3],
-            "IMPV": [1000, 2000, 0],
-            "BASEZONE": ["I", "I", "RL"],
-            "LCP_CODE": ["R", "R", "R"],
-            "GEN_PLAN": ["I", "I", "RL"],
+            "IMPV": [1000, 1000, 2000],
+            "BASEZONE": ["RL", "RL", "I"],
+            "LCP_CODE": ["R", "R", "I"],
+            "GEN_PLAN": ["RL", "RL", "I"],
             "STATUS": ["A", "A", "A"],
         },
         geometry=[
             box(0, 0, side, side),
             box(side, 0, 2 * side, side),
-            box(3 * side, 0, 4 * side, side),
+            box(2 * side, 0, 3 * side, side),
         ],
         crs="EPSG:3310",
     )
@@ -63,10 +64,11 @@ def test_candidate_sites_combine_adjacent_industrial_parcels():
     result = candidate_sites(parcels, min_gross_acres=10)
 
     assert len(result) == 1
-    assert result.iloc[0]["site_type"] == "industrial_assemblage"
-    assert result.iloc[0]["site_apns"] == "100,200"
-    assert result.iloc[0]["parcel_count"] == 2
-    assert result.iloc[0]["IMPV"] == 3000
+    assert result.iloc[0]["site_type"] == "greenfield"
+    assert result.iloc[0]["site_apns"] == "100"
+    assert result.iloc[0]["parcel_count"] == 1
+    assert result.iloc[0]["source_section_count"] == 2
+    assert result.iloc[0]["IMPV"] == 1000
     assert result.iloc[0].geometry.area / ACRE_M2 == pytest.approx(12, abs=0.001)
 
 
@@ -162,6 +164,23 @@ def test_jurisdiction_metrics_label_parcels_by_majority_overlap():
     assert labels.tolist() == ["City of Fort Bragg", "City of Fort Bragg"]
 
 
+def test_inland_county_boundary_omits_western_edge():
+    county = gpd.GeoDataFrame(
+        {"COUNTY_NAME": ["Test County"]},
+        geometry=[box(0, 0, 100_000, 100_000)],
+        crs="EPSG:3310",
+    )
+
+    result = inland_county_boundary(county)
+    coordinates = np.asarray(result.geometry.iloc[0].coords)
+
+    assert result.iloc[0]["COUNTY_NAME"] == "Test County"
+    assert np.any(coordinates[:, 0] == 100_000)
+    assert not np.any(
+        (coordinates[:-1, 0] == 0) & (coordinates[1:, 0] == 0)
+    )
+
+
 def test_highway_metrics_classify_east_west_and_crossing():
     sites = gpd.GeoDataFrame(
         geometry=[
@@ -181,6 +200,22 @@ def test_highway_metrics_classify_east_west_and_crossing():
     np.testing.assert_allclose(distances, [10, 10, 0], atol=0.02)
     assert sides == ["west", "east", "crosses"]
     np.testing.assert_allclose(scores, [0, 1, 0.5])
+
+
+def test_highway_metrics_compare_side_at_site_latitude():
+    sites = gpd.GeoDataFrame(
+        geometry=[box(-1, 9, 1, 11)],
+        crs="EPSG:3310",
+    )
+    highway = gpd.GeoDataFrame(
+        geometry=[LineString([(10, 10), (-5, 0)])],
+        crs=sites.crs,
+    )
+
+    _, sides, scores = highway_metrics(sites, highway)
+
+    assert sides == ["west"]
+    np.testing.assert_allclose(scores, [0])
 
 
 def test_terrain_line_visible_detects_blocking_ridge():

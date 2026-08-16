@@ -406,6 +406,7 @@ def fetch_all(config: dict[str, Any], data_dir: Path, refresh: bool = False) -> 
 
     for name, source in config["sources"].items():
         destination = data_dir / source["filename"]
+        source_bbox = source.get("bbox", bbox)
         cache_fields = set(source.get("cache_fields", []))
         cached_payload = (
             json.loads(destination.read_text())
@@ -439,7 +440,12 @@ def fetch_all(config: dict[str, Any], data_dir: Path, refresh: bool = False) -> 
             print(f"{name}: downloading", flush=True)
             kind = source["kind"]
             if kind == "arcgis-vector":
-                details = fetch_arcgis_vector(session, source, bbox, destination)
+                details = fetch_arcgis_vector(
+                    session,
+                    source,
+                    source_bbox,
+                    destination,
+                )
             elif kind == "arcgis-raster":
                 details = fetch_arcgis_raster(session, source, bbox, destination)
             elif kind in {"wms-raster", "wcs-raster"}:

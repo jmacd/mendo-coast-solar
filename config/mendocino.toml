@@ -32,6 +32,15 @@ fields = ["OBJECTID", "CDT_NAME_SHORT", "CDTFA_COUNTY"]
 filename = "fort-bragg-city-limits.geojson"
 required = true
 
+[sources.county_boundary]
+kind = "arcgis-vector"
+url = "https://services1.arcgis.com/jUJYIo9tSA7EHvfZ/arcgis/rest/services/California_County_Boundaries/FeatureServer/0"
+where = "COUNTY_NAME = 'Mendocino County'"
+bbox = [-124.15, 38.7, -122.7, 40.1]
+fields = ["OBJECTID", "COUNTY_NAME"]
+filename = "mendocino-county-boundary.geojson"
+required = true
+
 [sources.parcels]
 kind = "arcgis-vector"
 url = "https://services2.arcgis.com/iq8zYa0SRsvIFFKz/arcgis/rest/services/Mendocino_County_Parcels/FeatureServer/0"
@@ -132,6 +141,34 @@ fields = [
 filename = "pge-feeders.geojson"
 required = true
 
+[sources.pge_distribution_substations]
+kind = "arcgis-vector"
+url = "https://services2.arcgis.com/mJaJSax0KPHoCNB6/ArcGIS/rest/services/DRPComplianceRelProd/FeatureServer/0"
+where = "Publish = 1"
+fields = [
+  "OBJECTID",
+  "SubstationName",
+  "SubstationID",
+  "Voltage_kV",
+  "NUMBANKS",
+  "Existing_DG",
+  "Queued_DG",
+  "Total_DG",
+]
+filename = "pge-distribution-substations.geojson"
+required = true
+
+[sources.pge_transmission_lines]
+kind = "arcgis-vector"
+url = "https://services2.arcgis.com/mJaJSax0KPHoCNB6/ArcGIS/rest/services/DRPComplianceRelProd/FeatureServer/5"
+where = "Publish = 1"
+# Extend east only for transmission context so the coastal 60 kV network's
+# connections to the 115 and 230 kV system remain visible.
+bbox = [-124.15, 38.7, -122.5, 40.1]
+fields = ["OBJECTID", "TLINE_NAME", "RATEDKV", "Last_Update_On_Map"]
+filename = "pge-transmission-lines.geojson"
+required = true
+
 [sources.pge_load_profiles]
 kind = "arcgis-related-table"
 url = "https://services2.arcgis.com/mJaJSax0KPHoCNB6/ArcGIS/rest/services/DRPComplianceRelProd/FeatureServer/23"
@@ -175,7 +212,6 @@ acres_per_mw = 5.5
 system_loss_fraction = 0.14
 grid_distance_scale_m = 1000.0
 max_distribution_distance_m = 1000.0
-min_generation_capacity_kw = 500.0
 required_phase_count = 3
 max_improvement_value_per_acre = 10000.0
 open_land_cover_classes = [31, 52, 71, 81]

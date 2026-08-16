@@ -105,7 +105,9 @@ This preserves the original assumptions for comparison.
 | `output/grid-candidates.geojson` | Lightweight candidate layer for the local grid explorer |
 | `output/ica-sections.geojson` | Published PG&E ICA sections for the grid explorer |
 | `output/distribution-grid.geojson` | Coast-serving feeder geometry for the grid explorer |
-| `output/distribution-ready-parcels.*` | Subset with at least 500 kW of static PV ICA |
+| `output/distribution-substations.geojson` | Published PG&E distribution-substation points |
+| `output/transmission-lines.geojson` | Published PG&E 60, 115, and 230 kV transmission lines |
+| `output/county-boundary.geojson` | Mendocino County study boundary for map context |
 | `output/screened-parcels.csv` | All analyzed parcels, including failed gates |
 | `output/screened-parcels.geojson` | Screened parcel geometry and diagnostics |
 | `output/report.md` | Run summary, known-site checks, and limitations |
@@ -127,22 +129,15 @@ searches by APN, County situs address, town, zone, or feeder. The map needs
 internet access for Leaflet and aerial or street-map tiles; candidate geometry
 and attributes are embedded in the HTML.
 
-Generate the detailed Fort Bragg–Mendocino 12 kV map after running the analysis:
+The landing page uses `site/grid-explorer.html` for the detailed
+Fort Bragg–Mendocino 12 kV view. It renders a crisp vector basemap, follows pan
+and zoom anywhere along the coast, and re-ranks the best candidates in the
+visible region. The county-wide ranking remains available in
+`candidate-map.html`.
 
-```sh
-python tools/render_local_grid_map.py
-```
-
-The resulting `site/caspar-local-grid.svg` overlays color-coded PG&E ICA
-sections and zoning-colored candidate parcels on an OpenStreetMap basemap.
-Candidate addresses and static-PV ICA values are connected to parcel
-boundaries. Basemap tiles are downloaded once to `data/osm-tiles/` and cached
-for later renders.
-
-The landing page uses `site/grid-explorer.html` for the live version of this
-view. It renders a crisp vector basemap, follows pan and zoom anywhere along
-the coast, and re-ranks the best candidates in the visible region. The
-county-wide ranking remains available in `candidate-map.html`.
+`site/county-grid.html` uses the same published infrastructure layers and map
+theme for the landing-page county overview, replacing the former static
+transmission image.
 
 Useful output fields include:
 
@@ -171,12 +166,12 @@ Open both GeoJSON files in QGIS. Add current aerial imagery and inspect:
 4. Wetlands, protected land, farmland, fire hazard, and transmission lines.
 5. The reason each promising near miss failed.
 
-The CSV can be sorted directly. For example, to find storage candidates that
-do not meet the static PV ICA threshold, filter:
+The CSV can be sorted directly. For example, to find storage candidates on
+sections with no published static PV ICA, filter:
 
 ```text
 eligible == True
-distribution_readiness_reasons == insufficient_static_pv_ica
+pge_GenericPVCapacity_kW == 0
 ```
 
 Those are especially relevant for solar-plus-storage, controlled-export, or
@@ -224,6 +219,7 @@ The manifest currently retrieves:
 - California Energy Commission transmission lines
 - Caltrans State Highway Network Route 1 geometry
 - PG&E distribution ICA line sections
+- PG&E distribution substations and published transmission lines
 - PG&E feeder summaries and monthly-hour load profiles
 - USGS 3DEP elevation
 - USGS/MRLC NLCD 2021 land cover
@@ -252,8 +248,8 @@ as follows:
 5. Classify sites by Mendocino County or City of Fort Bragg planning
    jurisdiction without subtracting incorporated land.
 6. Exclude parcels with County base zoning `OS` (Open Space).
-7. Combine touching industrial parcels into candidate assemblages; keep other
-   parcels as individual candidates.
+7. Combine multiple source geometry sections sharing one APN into a single
+   candidate; do not combine different APNs.
 8. Keep sites of at least 10 gross acres with no more than $10,000 of assessed
    improvement value per gross acre.
 9. Use 30-meter elevation and land-cover cells to locate contiguous land at or
@@ -274,8 +270,7 @@ The primary weighted score combines contiguous land, flatness, allowed cover,
 low development intensity, industrial reuse, distribution and transmission
 proximity, feeder residential customers, feeder peak demand, static PV ICA,
 solar climatology, and low terrain visibility from Highway 1. Static ICA is
-deliberately a small scoring factor, not a hard gate. The separate
-`distribution-ready-parcels` output applies the 500 kW static-PV threshold.
+deliberately a small scoring factor, not a hard gate.
 
 The scenic model samples official Route 1 geometry every 100 meters and tests
 terrain line-of-sight to nine representative cells in each site's largest
@@ -347,9 +342,10 @@ described by distribution ICA.
 
 ## Current storage ranking and next development
 
-The model now retains both a strategic solar-storage ranking and a static
-distribution-ready subset. Its 1 MW PV / 4 MWh battery reference case is for
-comparison only; no hourly dispatch is yet simulated.
+The model retains a strategic solar-storage ranking and reports the two
+published ICA values without imposing a minimum ICA threshold. Its 1 MW PV /
+4 MWh battery reference case is for comparison only; no hourly dispatch is
+yet simulated.
 
 The next development should add hourly coastal solar, actual aggregated
 community load, battery dispatch and losses, curtailment, static and Limited

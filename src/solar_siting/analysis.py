@@ -13,7 +13,7 @@ import shapely
 from rasterio.features import geometry_mask, geometry_window
 from rasterio.warp import Resampling, reproject
 from scipy import ndimage
-from shapely.geometry import box, mapping
+from shapely.geometry import LineString, box, mapping
 
 from .map import write_candidate_map
 
@@ -218,11 +218,47 @@ def jurisdiction_metrics(
     return acres, fractions, labels
 
 
+def inland_county_boundary(county: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
+    geometry = valid_union(county.geometry)
+    if geometry.geom_type == "MultiPolygon":
+        geometry = max(geometry.geoms, key=lambda part: part.area)
+    coordinates = np.asarray(geometry.exterior.coords)
+    vertical_span = coordinates[:, 1].max() - coordinates[:, 1].min()
+    edge_band = max(vertical_span * 0.01, 1000)
+    north_candidates = np.flatnonzero(
+        coordinates[:, 1] >= coordinates[:, 1].max() - edge_band
+    )
+    south_candidates = np.flatnonzero(
+        coordinates[:, 1] <= coordinates[:, 1].min() + edge_band
+    )
+    north_index = north_candidates[
+        np.argmin(coordinates[north_candidates, 0])
+    ]
+    south_index = south_candidates[
+        np.argmin(coordinates[south_candidates, 0])
+    ]
+
+    def ring_path(start: int, end: int) -> np.ndarray:
+        if start <= end:
+            return coordinates[start : end + 1]
+        return np.vstack([coordinates[start:], coordinates[1 : end + 1]])
+
+    first = ring_path(north_index, south_index)
+    second = ring_path(south_index, north_index)[::-1]
+    inland = first if np.mean(first[:, 0]) > np.mean(second[:, 0]) else second
+    return gpd.GeoDataFrame(
+        {"COUNTY_NAME": [county.iloc[0].get("COUNTY_NAME", "Mendocino County")]},
+        geometry=[LineString(inland)],
+        crs=county.crs,
+    )
+
+
 def highway_metrics(
     sites: gpd.GeoDataFrame,
     highway: gpd.GeoDataFrame,
 ) -> tuple[np.ndarray, list[str], np.ndarray]:
     highway_geometry = valid_union(highway.geometry)
+    highway_bounds = highway_geometry.bounds
     distances = sites.geometry.distance(highway_geometry).to_numpy(dtype=float)
     sides = []
     east_scores = []
@@ -232,10 +268,23 @@ def highway_metrics(
             east_scores.append(0.5)
             continue
         centroid = geometry.centroid
-        nearest_line = shapely.shortest_line(centroid, highway_geometry)
-        coordinates = shapely.get_coordinates(nearest_line)
-        highway_point = coordinates[-1]
-        if centroid.x < highway_point[0]:
+        latitude_line = LineString(
+            [
+                (highway_bounds[0] - 1, centroid.y),
+                (highway_bounds[2] + 1, centroid.y),
+            ]
+        )
+        crossings = shapely.get_coordinates(
+            highway_geometry.intersection(latitude_line)
+        )
+        if len(crossings):
+            highway_x = crossings[
+                np.argmin(np.abs(crossings[:, 0] - centroid.x))
+            ][0]
+        else:
+            nearest_line = shapely.shortest_line(centroid, highway_geometry)
+            highway_x = shapely.get_coordinates(nearest_line)[-1][0]
+        if centroid.x < highway_x:
             sides.append("west")
             east_scores.append(0.0)
         else:
@@ -412,86 +461,51 @@ def candidate_sites(
     fallback_ids = parcels.get("FID", parcels.index.to_series()).astype(str)
     apns = parcels.get("APNFULL", fallback_ids).fillna("").astype(str)
     parcels["_apn"] = apns.where(apns.str.strip() != "", fallback_ids)
-    industrial = parcels[
-        parcels.get("BASEZONE", "").fillna("").astype(str).str.upper() == "I"
-    ].copy()
-    nonindustrial = parcels.drop(index=industrial.index)
 
     rows: list[dict[str, Any]] = []
-    for _, parcel in nonindustrial.iterrows():
-        if parcel.geometry.area / ACRE_M2 < min_gross_acres:
+    for apn, members in parcels.groupby("_apn", sort=False):
+        geometry = valid_union(members.geometry)
+        if geometry.area / ACRE_M2 < min_gross_acres:
             continue
-        row = parcel.to_dict()
-        row["site_type"] = "greenfield"
-        row["site_apns"] = parcel["_apn"]
+        row = members.iloc[0].to_dict()
+        row["geometry"] = geometry
+        zones = (
+            {
+                value.strip().upper()
+                for value in members["BASEZONE"].fillna("").astype(str)
+                if value.strip()
+            }
+            if "BASEZONE" in members
+            else set()
+        )
+        row["site_type"] = (
+            "industrial_brownfield" if zones == {"I"} else "greenfield"
+        )
+        row["site_apns"] = str(apn)
+        row["APNFULL"] = str(apn)
         row["parcel_count"] = 1
-        rows.append(row)
-
-    if not industrial.empty:
-        parent = {index: index for index in industrial.index}
-
-        def find(index: Any) -> Any:
-            while parent[index] != index:
-                parent[index] = parent[parent[index]]
-                index = parent[index]
-            return index
-
-        def union(left: Any, right: Any) -> None:
-            left_root = find(left)
-            right_root = find(right)
-            if left_root != right_root:
-                parent[right_root] = left_root
-
-        spatial_index = industrial.sindex
-        industrial_indices = list(industrial.index)
-        for position, index in enumerate(industrial_indices):
-            matches = spatial_index.query(
-                industrial.loc[index].geometry,
-                predicate="intersects",
-            )
-            for match in matches:
-                union(index, industrial_indices[int(match)])
-
-        groups: dict[Any, list[Any]] = {}
-        for index in industrial.index:
-            groups.setdefault(find(index), []).append(index)
-
-        for indices in groups.values():
-            members = industrial.loc[indices]
-            geometry = valid_union(members.geometry)
-            if geometry.area / ACRE_M2 < min_gross_acres:
+        row["source_section_count"] = len(members)
+        row["IMPV"] = members["IMPV"].fillna(0).astype(float).max()
+        row["FID"] = ",".join(
+            sorted(members.get("FID", members.index.to_series()).astype(str))
+        )
+        for column in [
+            "SITUS_ADD",
+            "SITUS_CTY",
+            "LCP_CODE",
+            "GEN_PLAN",
+            "BASEZONE",
+            "STATUS",
+        ]:
+            if column not in members:
                 continue
-            row = members.iloc[0].to_dict()
-            row["geometry"] = geometry
-            row["site_type"] = (
-                "industrial_assemblage"
-                if len(members) > 1
-                else "industrial_brownfield"
+            values = sorted(
+                value
+                for value in members[column].dropna().astype(str).unique()
+                if value.strip()
             )
-            row["site_apns"] = ",".join(sorted(members["_apn"].unique()))
-            row["APNFULL"] = row["site_apns"]
-            row["parcel_count"] = len(members)
-            row["IMPV"] = members["IMPV"].fillna(0).astype(float).sum()
-            row["FID"] = ",".join(
-                sorted(members.get("FID", members.index.to_series()).astype(str))
-            )
-            for column in [
-                "SITUS_ADD",
-                "SITUS_CTY",
-                "LCP_CODE",
-                "GEN_PLAN",
-                "BASEZONE",
-                "STATUS",
-            ]:
-                if column not in members:
-                    continue
-                values = sorted(
-                    value
-                    for value in members[column].dropna().astype(str).unique()
-                    if value.strip()
-                )
-                row[column] = ",".join(values)
-            rows.append(row)
+            row[column] = ",".join(values)
+        rows.append(row)
 
     return gpd.GeoDataFrame(rows, geometry="geometry", crs=parcels.crs)
 
@@ -651,6 +665,11 @@ def analyze(
     known_sites_path: Path | None = None,
 ) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
+    for legacy_name in [
+        "distribution-ready-parcels.csv",
+        "distribution-ready-parcels.geojson",
+    ]:
+        (output_dir / legacy_name).unlink(missing_ok=True)
     crs = config["area"]["analysis_crs"]
     settings = config["analysis"]
     sources = config["sources"]
@@ -665,6 +684,9 @@ def analyze(
     municipal_boundary = gpd.read_file(
         data_dir
         / sources[scope_settings["municipal_jurisdiction_source"]]["filename"]
+    ).to_crs(crs)
+    county_boundary = gpd.read_file(
+        data_dir / sources["county_boundary"]["filename"]
     ).to_crs(crs)
     parcels = gpd.read_file(data_dir / sources["parcels"]["filename"]).to_crs(crs)
     parcels.geometry = parcels.geometry.make_valid()
@@ -681,6 +703,12 @@ def analyze(
     pge_ica = gpd.read_file(data_dir / sources["pge_ica"]["filename"]).to_crs(crs)
     pge_feeders = gpd.read_file(
         data_dir / sources["pge_feeders"]["filename"]
+    ).to_crs(crs)
+    pge_distribution_substations = gpd.read_file(
+        data_dir / sources["pge_distribution_substations"]["filename"]
+    ).to_crs(crs)
+    pge_transmission_lines = gpd.read_file(
+        data_dir / sources["pge_transmission_lines"]["filename"]
     ).to_crs(crs)
 
     bounds_geometry = gpd.GeoSeries(
@@ -1034,9 +1062,7 @@ def analyze(
     generation_capacity = (
         parcels["pge_GenericPVCapacity_kW"].fillna(0).to_numpy(dtype=float)
     )
-    phase_count = parcels["pge_phase_cnt"].fillna(0).to_numpy(dtype=float)
     hosting_score = np.clip(generation_capacity / 2000, 0, 1)
-    hosting_score *= np.where(phase_count >= 3, 1.0, 0.25)
     metrics = {
         "contiguous_land": _normalize(
             parcels["contiguous_acres"].to_numpy(dtype=float), high=20
@@ -1116,24 +1142,6 @@ def analyze(
         for i in range(len(parcels))
     ]
     parcels["eligible"] = parcels["eligibility_reasons"] == ""
-    distribution_gate_columns = {
-        **storage_gate_columns,
-        "insufficient_static_pv_ica": (
-            parcels["pge_GenericPVCapacity_kW"]
-            < settings["min_generation_capacity_kw"]
-        ),
-    }
-    parcels["distribution_readiness_reasons"] = [
-        ",".join(
-            name
-            for name, failed in distribution_gate_columns.items()
-            if bool(failed.iloc[i])
-        )
-        for i in range(len(parcels))
-    ]
-    parcels["distribution_ready"] = (
-        parcels["distribution_readiness_reasons"] == ""
-    )
     parcels["rank"] = np.nan
     eligible_order = parcels[parcels["eligible"]].sort_values(
         ["score", "contiguous_acres"],
@@ -1149,12 +1157,11 @@ def analyze(
         "rank",
         "eligible",
         "eligibility_reasons",
-        "distribution_ready",
-        "distribution_readiness_reasons",
         "apn",
         "site_apns",
         "site_type",
         "parcel_count",
+        "source_section_count",
         "residential_zoning",
         "SITUS_ADD",
         "SITUS_CTY",
@@ -1268,6 +1275,17 @@ def analyze(
     (output_dir / "distribution-grid.geojson").write_text(
         anchor_grid.to_crs("EPSG:4326").to_json(drop_id=True)
     )
+    (output_dir / "distribution-substations.geojson").write_text(
+        pge_distribution_substations.to_crs("EPSG:4326").to_json(drop_id=True)
+    )
+    (output_dir / "transmission-lines.geojson").write_text(
+        pge_transmission_lines.to_crs("EPSG:4326").to_json(drop_id=True)
+    )
+    (output_dir / "county-boundary.geojson").write_text(
+        inland_county_boundary(county_boundary)
+        .to_crs("EPSG:4326")
+        .to_json(drop_id=True)
+    )
     (output_dir / "ranked-parcels.geojson").write_text(
         public.to_crs("EPSG:4326").to_json(drop_id=True)
     )
@@ -1280,6 +1298,7 @@ def analyze(
         "planning_jurisdiction",
         "score",
         "contiguous_acres",
+        "highway_1_side",
         "pge_GenCapacity_kW",
         "pge_GenericPVCapacity_kW",
         "pge_distance_m",
@@ -1290,14 +1309,6 @@ def analyze(
     )
     public.drop(columns="geometry").to_csv(output_dir / "ranked-parcels.csv", index=False)
     write_candidate_map(public, output_dir / "candidate-map.html")
-    distribution_ready = screened[screened["distribution_ready"]].copy()
-    (output_dir / "distribution-ready-parcels.geojson").write_text(
-        distribution_ready.to_crs("EPSG:4326").to_json(drop_id=True)
-    )
-    distribution_ready.drop(columns="geometry").to_csv(
-        output_dir / "distribution-ready-parcels.csv",
-        index=False,
-    )
     (output_dir / "screened-parcels.geojson").write_text(
         screened.to_crs("EPSG:4326").to_json(drop_id=True)
     )
@@ -1324,7 +1335,6 @@ def analyze(
         f"# {config['area']['name']} solar screening",
         "",
         f"Ranked solar-storage sites: {len(public)}",
-        f"Static distribution-ready sites: {len(distribution_ready)}",
         "",
         "This is a regional screening model, not a permitting, biological,",
         "survey, title, or PG&E interconnection determination.",

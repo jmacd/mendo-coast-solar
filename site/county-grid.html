@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mendocino County transmission grid</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <style>
+    * { box-sizing: border-box; }
+    html, body, #app { height: 100%; margin: 0; overflow: hidden; }
+    #map { height: 100%; width: 100%; }
+    #status {
+      background: var(--map-cream);
+      border-radius: 6px;
+      box-shadow: 0 2px 10px rgba(23, 49, 40, .16);
+      font-size: 11px;
+      left: 12px;
+      padding: 7px 9px;
+      position: absolute;
+      top: 12px;
+      z-index: 1000;
+    }
+    #status[hidden] { display: none; }
+  </style>
+  <link rel="stylesheet" href="map-theme.css">
+</head>
+<body>
+  <main id="app">
+    <div id="map" aria-label="Interactive Mendocino County transmission grid"></div>
+    <div id="status">Loading grid infrastructure...</div>
+  </main>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="map-infrastructure.js"></script>
+  <script>
+    const map = L.map("map", { preferCanvas: true });
+    map.createPane("infrastructure-lines");
+    map.getPane("infrastructure-lines").style.zIndex = 350;
+    map.createPane("infrastructure-stations");
+    map.getPane("infrastructure-stations").style.zIndex = 650;
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap contributors",
+      maxZoom: 19
+    }).addTo(map);
+
+    function esc(value) {
+      return String(value ?? "").replace(/[&<>"']/g, character => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      })[character]);
+    }
+
+    async function loadMap() {
+      const resources = [
+        ["transmission-lines.geojson", "transmission lines"],
+        ["distribution-substations.geojson", "feeder substations"],
+        ["county-boundary.geojson", "county boundary"]
+      ];
+      const responses = await Promise.all(resources.map(([url]) => fetch(url)));
+      const failed = responses
+        .map((response, index) => response.ok ? null : resources[index][1])
+        .filter(Boolean);
+      if (failed.length) throw new Error(`Could not load ${failed.join(", ")}`);
+      const [transmission, substations, county] = await Promise.all(
+        responses.map(response => response.json())
+      );
+      const countyLayer = L.geoJSON(county, {
+        pane: "infrastructure-lines",
+        style: MapInfrastructure.countyStyle
+      }).addTo(map);
+      const transmissionLayer = L.geoJSON(transmission, {
+        pane: "infrastructure-lines",
+        style: MapInfrastructure.transmissionStyle,
+        onEachFeature: (feature, layer) => layer.bindTooltip(
+          MapInfrastructure.tooltip(feature.properties, [
+            ["TLINE_NAME", "Transmission line"],
+            ["RATEDKV", "Rated kV"]
+          ], esc),
+          { sticky: true }
+        )
+      }).addTo(map);
+      const stationLayer = L.geoJSON(substations, {
+        pane: "infrastructure-stations",
+        pointToLayer: (feature, latlng) => MapInfrastructure.substationMarker(latlng),
+        onEachFeature: (feature, layer) => {
+          const properties = feature.properties;
+          layer.bindTooltip(esc(properties.SubstationName), {
+            className: "station-label",
+            direction: "right",
+            permanent: true
+          });
+          layer.bindPopup(MapInfrastructure.tooltip(properties, [
+            ["SubstationName", "Substation"],
+            ["Voltage_kV", "Distribution voltage kV"],
+            ["NUMBANKS", "Banks"]
+          ], esc));
+        }
+      }).addTo(map);
+      map.fitBounds(countyLayer.getBounds(), { padding: [18, 18] });
+      document.querySelector("#status").hidden = true;
+    }
+
+    loadMap().catch(error => {
+      document.querySelector("#status").textContent = error.message;
+    });
+  </script>
+</body>
+</html>
