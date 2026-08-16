@@ -199,7 +199,7 @@ def write_candidate_map(sites: gpd.GeoDataFrame, destination: Path) -> None:
         <input id="search" type="search" placeholder="APN, address, feeder..."
           aria-label="Search candidates">
         <select id="zone-filter" aria-label="Filter zoning">
-          <option value="focus">RR/RMR/RL/AG/Industrial</option>
+          <option value="focus">AG/FL/TP/RL/I</option>
           <option value="all">All zoning</option>
           <option value="residential">Residential: RR and RMR</option>
           <option value="RR">Rural Residential: RR</option>
@@ -253,7 +253,7 @@ def write_candidate_map(sites: gpd.GeoDataFrame, destination: Path) -> None:
 const candidates = __DATA__;
 const colors = __COLORS__;
 const labels = __LABELS__;
-const focusZones = new Set(["RR", "RMR", "RL", "AG", "I"]);
+const focusZones = new Set(["AG", "FL", "TP", "RL", "I"]);
 const residentialZones = new Set(["RR", "RMR"]);
 const map = L.map("map", { preferCanvas: true });
 const imagery = L.tileLayer(

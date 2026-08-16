@@ -51,6 +51,8 @@ def test_candidate_map_embeds_sites_and_zoning(tmp_path):
     assert "Coastal Zone" in content
     assert '<option value="RR">Rural Residential: RR</option>' in content
     assert '<option value="RMR">Remote Residential: RMR</option>' in content
+    assert '<option value="focus">AG/FL/TP/RL/I</option>' in content
+    assert 'new Set(["AG", "FL", "TP", "RL", "I"])' in content
     assert 'id="hide-west" type="checkbox" checked' in content
     assert 'id="hide-zero-ica" type="checkbox" checked' in content
     assert 'properties.highway_1_side === "west"' in content
