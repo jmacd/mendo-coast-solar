@@ -132,8 +132,8 @@ It records:
 
 The initial model required three-phase service and at least 500 kW of
 published general-generation ICA. The storage-oriented revision retains the
-three-phase and distance gates but treats static PV ICA as a small score and a
-separate distribution-readiness test.
+three-phase and distance gates, reports both ICA values, and treats static PV
+ICA as a small score rather than a hard threshold.
 
 ### Feeder demand
 
@@ -252,7 +252,7 @@ local coastal homes. It:
 - Reports the static PV export limit and reference-project export gap.
 - Reports controlled-export, distribution-upgrade, and nearby-transmission
   study paths without treating them as approvals.
-- Combines touching industrial parcels into candidate assemblages.
+- Combines multiple source geometry sections sharing one APN.
 - Allows low-intensity developed NLCD classes on industrial reuse sites.
 - Gives industrial reuse an explicit but limited score.
 - Retains wetland and other planning exclusions as measured acreage losses.
@@ -260,10 +260,10 @@ local coastal homes. It:
 - Rewards low terrain visibility from Highway 1.
 
 The grid-corridor run starts with 15,927 grid-accessible parcel features,
-creates 2,381 candidate sites after coarse constraints, and finds 208 sites with at least 10
-contiguous suitable acres, a three-phase section within 1 kilometer, and
-acceptable assessed improvement intensity. Five of those also have at
-least 500 kW of static generic-PV ICA.
+creates 2,381 candidate sites after coarse constraints, and finds 208 sites
+with at least 10 contiguous suitable acres, a three-phase section within 1
+kilometer, and acceptable assessed improvement intensity. Both published ICA
+values are reported without imposing a minimum ICA threshold.
 
 The highest-ranked sites now occur on the higher-demand Fort Bragg/Caspar
 feeders rather than exclusively around Elk. The former mill assemblage ranks
@@ -400,8 +400,8 @@ Creek. It ranks second overall and warrants direct comparison with Fern Creek,
 subject to confirming Public Facilities zoning, ownership, existing uses,
 access, environmental constraints, and interconnection feasibility.
 
-Several Caspar parcels pass the land, development, proximity, and three-phase
-tests but fail only the 500 kW static ICA gate:
+These Caspar parcels illustrate why published ICA is reported as a diagnostic
+rather than used as a minimum threshold:
 
 | APN | Approximate location | Contiguous open/flat acres | Land potential | Nearby general-generation ICA |
 |---|---|---:|---:|---:|
@@ -635,9 +635,8 @@ screened land, a known local use case, three-phase distribution, and immediate
 ## Present conclusion
 
 The program narrowed 15,927 grid-accessible parcel features to a reviewable
-set. The storage-oriented revision now ranks 208 strategic sites, including 19
-wholly outside the Coastal Zone, and separately reports 5 sites with at least
-500 kW of static PV ICA.
+set. The storage-oriented revision ranks strategic sites and reports both
+published ICA values without using either as a minimum threshold.
 
 For the project now under consideration, APN `1180901200` should be treated as
 a strong strategic candidate for solar plus storage. A 1 MW array is not

@@ -41,22 +41,22 @@ def test_specific_yield_has_physical_units():
     assert result == pytest.approx(1365.465)
 
 
-def test_candidate_sites_combine_adjacent_industrial_parcels():
+def test_candidate_sites_combine_sections_with_same_apn_only():
     side = (6 * ACRE_M2) ** 0.5
     parcels = gpd.GeoDataFrame(
         {
-            "APNFULL": ["100", "200", "300"],
+            "APNFULL": ["100", "100", "200"],
             "FID": [1, 2, 3],
-            "IMPV": [1000, 2000, 0],
-            "BASEZONE": ["I", "I", "RL"],
-            "LCP_CODE": ["R", "R", "R"],
-            "GEN_PLAN": ["I", "I", "RL"],
+            "IMPV": [1000, 1000, 2000],
+            "BASEZONE": ["RL", "RL", "I"],
+            "LCP_CODE": ["R", "R", "I"],
+            "GEN_PLAN": ["RL", "RL", "I"],
             "STATUS": ["A", "A", "A"],
         },
         geometry=[
             box(0, 0, side, side),
             box(side, 0, 2 * side, side),
-            box(3 * side, 0, 4 * side, side),
+            box(2 * side, 0, 3 * side, side),
         ],
         crs="EPSG:3310",
     )
@@ -64,10 +64,11 @@ def test_candidate_sites_combine_adjacent_industrial_parcels():
     result = candidate_sites(parcels, min_gross_acres=10)
 
     assert len(result) == 1
-    assert result.iloc[0]["site_type"] == "industrial_assemblage"
-    assert result.iloc[0]["site_apns"] == "100,200"
-    assert result.iloc[0]["parcel_count"] == 2
-    assert result.iloc[0]["IMPV"] == 3000
+    assert result.iloc[0]["site_type"] == "greenfield"
+    assert result.iloc[0]["site_apns"] == "100"
+    assert result.iloc[0]["parcel_count"] == 1
+    assert result.iloc[0]["source_section_count"] == 2
+    assert result.iloc[0]["IMPV"] == 1000
     assert result.iloc[0].geometry.area / ACRE_M2 == pytest.approx(12, abs=0.001)
 
 

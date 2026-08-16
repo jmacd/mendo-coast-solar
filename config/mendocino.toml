@@ -212,7 +212,6 @@ acres_per_mw = 5.5
 system_loss_fraction = 0.14
 grid_distance_scale_m = 1000.0
 max_distribution_distance_m = 1000.0
-min_generation_capacity_kw = 500.0
 required_phase_count = 3
 max_improvement_value_per_acre = 10000.0
 open_land_cover_classes = [31, 52, 71, 81]

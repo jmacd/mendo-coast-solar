@@ -461,86 +461,51 @@ def candidate_sites(
     fallback_ids = parcels.get("FID", parcels.index.to_series()).astype(str)
     apns = parcels.get("APNFULL", fallback_ids).fillna("").astype(str)
     parcels["_apn"] = apns.where(apns.str.strip() != "", fallback_ids)
-    industrial = parcels[
-        parcels.get("BASEZONE", "").fillna("").astype(str).str.upper() == "I"
-    ].copy()
-    nonindustrial = parcels.drop(index=industrial.index)
 
     rows: list[dict[str, Any]] = []
-    for _, parcel in nonindustrial.iterrows():
-        if parcel.geometry.area / ACRE_M2 < min_gross_acres:
+    for apn, members in parcels.groupby("_apn", sort=False):
+        geometry = valid_union(members.geometry)
+        if geometry.area / ACRE_M2 < min_gross_acres:
             continue
-        row = parcel.to_dict()
-        row["site_type"] = "greenfield"
-        row["site_apns"] = parcel["_apn"]
+        row = members.iloc[0].to_dict()
+        row["geometry"] = geometry
+        zones = (
+            {
+                value.strip().upper()
+                for value in members["BASEZONE"].fillna("").astype(str)
+                if value.strip()
+            }
+            if "BASEZONE" in members
+            else set()
+        )
+        row["site_type"] = (
+            "industrial_brownfield" if zones == {"I"} else "greenfield"
+        )
+        row["site_apns"] = str(apn)
+        row["APNFULL"] = str(apn)
         row["parcel_count"] = 1
-        rows.append(row)
-
-    if not industrial.empty:
-        parent = {index: index for index in industrial.index}
-
-        def find(index: Any) -> Any:
-            while parent[index] != index:
-                parent[index] = parent[parent[index]]
-                index = parent[index]
-            return index
-
-        def union(left: Any, right: Any) -> None:
-            left_root = find(left)
-            right_root = find(right)
-            if left_root != right_root:
-                parent[right_root] = left_root
-
-        spatial_index = industrial.sindex
-        industrial_indices = list(industrial.index)
-        for position, index in enumerate(industrial_indices):
-            matches = spatial_index.query(
-                industrial.loc[index].geometry,
-                predicate="intersects",
-            )
-            for match in matches:
-                union(index, industrial_indices[int(match)])
-
-        groups: dict[Any, list[Any]] = {}
-        for index in industrial.index:
-            groups.setdefault(find(index), []).append(index)
-
-        for indices in groups.values():
-            members = industrial.loc[indices]
-            geometry = valid_union(members.geometry)
-            if geometry.area / ACRE_M2 < min_gross_acres:
+        row["source_section_count"] = len(members)
+        row["IMPV"] = members["IMPV"].fillna(0).astype(float).max()
+        row["FID"] = ",".join(
+            sorted(members.get("FID", members.index.to_series()).astype(str))
+        )
+        for column in [
+            "SITUS_ADD",
+            "SITUS_CTY",
+            "LCP_CODE",
+            "GEN_PLAN",
+            "BASEZONE",
+            "STATUS",
+        ]:
+            if column not in members:
                 continue
-            row = members.iloc[0].to_dict()
-            row["geometry"] = geometry
-            row["site_type"] = (
-                "industrial_assemblage"
-                if len(members) > 1
-                else "industrial_brownfield"
+            values = sorted(
+                value
+                for value in members[column].dropna().astype(str).unique()
+                if value.strip()
             )
-            row["site_apns"] = ",".join(sorted(members["_apn"].unique()))
-            row["APNFULL"] = row["site_apns"]
-            row["parcel_count"] = len(members)
-            row["IMPV"] = members["IMPV"].fillna(0).astype(float).sum()
-            row["FID"] = ",".join(
-                sorted(members.get("FID", members.index.to_series()).astype(str))
-            )
-            for column in [
-                "SITUS_ADD",
-                "SITUS_CTY",
-                "LCP_CODE",
-                "GEN_PLAN",
-                "BASEZONE",
-                "STATUS",
-            ]:
-                if column not in members:
-                    continue
-                values = sorted(
-                    value
-                    for value in members[column].dropna().astype(str).unique()
-                    if value.strip()
-                )
-                row[column] = ",".join(values)
-            rows.append(row)
+            row[column] = ",".join(values)
+        rows.append(row)
 
     return gpd.GeoDataFrame(rows, geometry="geometry", crs=parcels.crs)
 
@@ -700,6 +665,11 @@ def analyze(
     known_sites_path: Path | None = None,
 ) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
+    for legacy_name in [
+        "distribution-ready-parcels.csv",
+        "distribution-ready-parcels.geojson",
+    ]:
+        (output_dir / legacy_name).unlink(missing_ok=True)
     crs = config["area"]["analysis_crs"]
     settings = config["analysis"]
     sources = config["sources"]
@@ -1092,9 +1062,7 @@ def analyze(
     generation_capacity = (
         parcels["pge_GenericPVCapacity_kW"].fillna(0).to_numpy(dtype=float)
     )
-    phase_count = parcels["pge_phase_cnt"].fillna(0).to_numpy(dtype=float)
     hosting_score = np.clip(generation_capacity / 2000, 0, 1)
-    hosting_score *= np.where(phase_count >= 3, 1.0, 0.25)
     metrics = {
         "contiguous_land": _normalize(
             parcels["contiguous_acres"].to_numpy(dtype=float), high=20
@@ -1174,24 +1142,6 @@ def analyze(
         for i in range(len(parcels))
     ]
     parcels["eligible"] = parcels["eligibility_reasons"] == ""
-    distribution_gate_columns = {
-        **storage_gate_columns,
-        "insufficient_static_pv_ica": (
-            parcels["pge_GenericPVCapacity_kW"]
-            < settings["min_generation_capacity_kw"]
-        ),
-    }
-    parcels["distribution_readiness_reasons"] = [
-        ",".join(
-            name
-            for name, failed in distribution_gate_columns.items()
-            if bool(failed.iloc[i])
-        )
-        for i in range(len(parcels))
-    ]
-    parcels["distribution_ready"] = (
-        parcels["distribution_readiness_reasons"] == ""
-    )
     parcels["rank"] = np.nan
     eligible_order = parcels[parcels["eligible"]].sort_values(
         ["score", "contiguous_acres"],
@@ -1207,12 +1157,11 @@ def analyze(
         "rank",
         "eligible",
         "eligibility_reasons",
-        "distribution_ready",
-        "distribution_readiness_reasons",
         "apn",
         "site_apns",
         "site_type",
         "parcel_count",
+        "source_section_count",
         "residential_zoning",
         "SITUS_ADD",
         "SITUS_CTY",
@@ -1360,14 +1309,6 @@ def analyze(
     )
     public.drop(columns="geometry").to_csv(output_dir / "ranked-parcels.csv", index=False)
     write_candidate_map(public, output_dir / "candidate-map.html")
-    distribution_ready = screened[screened["distribution_ready"]].copy()
-    (output_dir / "distribution-ready-parcels.geojson").write_text(
-        distribution_ready.to_crs("EPSG:4326").to_json(drop_id=True)
-    )
-    distribution_ready.drop(columns="geometry").to_csv(
-        output_dir / "distribution-ready-parcels.csv",
-        index=False,
-    )
     (output_dir / "screened-parcels.geojson").write_text(
         screened.to_crs("EPSG:4326").to_json(drop_id=True)
     )
@@ -1394,7 +1335,6 @@ def analyze(
         f"# {config['area']['name']} solar screening",
         "",
         f"Ranked solar-storage sites: {len(public)}",
-        f"Static distribution-ready sites: {len(distribution_ready)}",
         "",
         "This is a regional screening model, not a permitting, biological,",
         "survey, title, or PG&E interconnection determination.",
