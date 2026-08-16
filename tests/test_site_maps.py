@@ -17,3 +17,5 @@ def test_county_overview_uses_shared_map_assets_and_generated_layers():
     assert '"county-boundary.geojson"' in content
     assert "MapInfrastructure.transmissionStyle" in content
     assert "MapInfrastructure.substationMarker" in content
+    assert "<aside" not in content
+    assert "map.fitBounds(countyLayer.getBounds()" in content
