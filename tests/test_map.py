@@ -90,8 +90,11 @@ def test_candidate_map_embeds_sites_and_zoning(tmp_path):
     assert content.index('class="zone-code">FL') < content.index('class="zone-code">TP')
     assert content.index('class="zone-code">TP') < content.index('class="zone-code">RL')
     assert content.index('class="zone-code">RL') < content.index('class="zone-code">I')
-    assert "<tr><th><span class=\"zone-code\">RR</span>" in content
-    assert '<tr class="total"><th>Total</th><td>1</td><td>1</td><td>1</td><td>1</td>' in content
+    assert '<tr data-zone="RR"><th><span class="zone-code">RR</span>' in content
+    assert '<td data-total-column="0">1</td>' in content
+    assert "function updateZoneCounts(filter)" in content
+    assert "row.hidden = !visible" in content
+    assert "updateZoneCounts(zoneFilter);" in content
     assert '["west", "crosses"].includes' in content
     assert '"highway_1_viewshed_exposure":0.042' in content
     assert "Nearest visible view" in content
@@ -141,16 +144,19 @@ def test_candidate_map_counts_crossing_parcels_with_west_exclusion(tmp_path):
 
     content = destination.read_text()
     assert (
-        '<span class="zone-code">AG</span>'
+        '<tr data-zone="AG"><th><span class="zone-code">AG</span>'
         '<span class="zone-name">Agricultural</span></th>'
         "<td>2</td><td>1</td><td>2</td><td>1</td>"
     ) in content
     assert (
-        '<span class="zone-code">RR</span>'
+        '<tr data-zone="RR"><th><span class="zone-code">RR</span>'
         '<span class="zone-name">Rural Residential</span></th>'
         "<td>1</td><td>0</td><td>1</td><td>0</td>"
     ) in content
     assert (
         '<tr class="total"><th>Total</th>'
-        "<td>3</td><td>1</td><td>3</td><td>1</td>"
+        '<td data-total-column="0">3</td>'
+        '<td data-total-column="1">1</td>'
+        '<td data-total-column="2">3</td>'
+        '<td data-total-column="3">1</td>'
     ) in content

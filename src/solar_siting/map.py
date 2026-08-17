@@ -73,14 +73,24 @@ def write_candidate_map(sites: gpd.GeoDataFrame, destination: Path) -> None:
                 f'<span class="zone-name">{html_module.escape(ZONE_LABELS.get(zone, zone))}</span>'
             )
         )
-        row_class = ' class="total"' if zone is None else ""
-        zone_rows.append(
-            f"<tr{row_class}><th>{zone_label}</th>"
-            f"<td>{len(subset)}</td>"
-            f"<td>{int((~west_or_crossing).sum())}</td>"
-            f"<td>{int((~zero_generation_ica).sum())}</td>"
-            f"<td>{int((~west_or_crossing & ~zero_generation_ica).sum())}</td></tr>"
-        )
+        counts = [
+            len(subset),
+            int((~west_or_crossing).sum()),
+            int((~zero_generation_ica).sum()),
+            int((~west_or_crossing & ~zero_generation_ica).sum()),
+        ]
+        if zone is None:
+            cells = "".join(
+                f'<td data-total-column="{index}">{count}</td>'
+                for index, count in enumerate(counts)
+            )
+            zone_rows.append(f'<tr class="total"><th>{zone_label}</th>{cells}</tr>')
+        else:
+            cells = "".join(f"<td>{count}</td>" for count in counts)
+            zone_rows.append(
+                f'<tr data-zone="{html_module.escape(zone)}">'
+                f"<th>{zone_label}</th>{cells}</tr>"
+            )
     zone_count_rows = "".join(zone_rows)
 
     template = """<!doctype html>
@@ -597,8 +607,23 @@ function zoneMatches(zone, filter) {
   if (filter === "other") return !focusZones.has(zone);
   return zone === filter;
 }
+function updateZoneCounts(filter) {
+  const totals = [0, 0, 0, 0];
+  for (const row of document.querySelectorAll(".zone-counts tr[data-zone]")) {
+    const visible = zoneMatches(row.dataset.zone, filter);
+    row.hidden = !visible;
+    if (!visible) continue;
+    [...row.querySelectorAll("td")].forEach((cell, index) => {
+      totals[index] += Number(cell.textContent);
+    });
+  }
+  totals.forEach((total, index) => {
+    document.querySelector(`[data-total-column="${index}"]`).textContent = total;
+  });
+}
 function applyFilters(fitMap = false) {
   const zoneFilter = document.querySelector("#zone-filter").value;
+  updateZoneCounts(zoneFilter);
   const hideWest = document.querySelector("#hide-west").checked;
   const hideZeroIca = document.querySelector("#hide-zero-ica").checked;
   const visibleLayers = [];
