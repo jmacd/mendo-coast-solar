@@ -1,3 +1,6 @@
+from pathlib import Path
+import tomllib
+
 import geopandas as gpd
 import numpy as np
 import pytest
@@ -39,6 +42,24 @@ def test_specific_yield_has_physical_units():
     result = specific_yield_mwh_per_mw(4.35, 0.14)
 
     assert result == pytest.approx(1365.465)
+
+
+def test_weights_prioritize_generation_ica_and_distribution_distance():
+    config_path = Path(__file__).parents[1] / "config" / "mendocino.toml"
+    with config_path.open("rb") as config_file:
+        weights = tomllib.load(config_file)["analysis"]["weights"]
+
+    assert sum(weights.values()) == pytest.approx(1.0)
+    assert weights["contiguous_land"] == 0.05
+    assert weights["distribution_proximity"] == 0.225
+    assert weights["grid_hosting_capacity"] == 0.225
+    for removed in [
+        "industrial_reuse",
+        "residential_demand",
+        "evening_peak_demand",
+        "transmission_proximity",
+    ]:
+        assert removed not in weights
 
 
 def test_candidate_sites_combine_sections_with_same_apn_only():

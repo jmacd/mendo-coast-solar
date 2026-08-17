@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Mendocino Coast grid and solar candidates</title>
+  <title>Mendocino Coast solar candidate parcels</title>
   <link rel="stylesheet"
     href="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css"
     integrity="sha384-Nq6PQ+9vJPvw7U/VfDELyrWoGQMsy0gi6QShhaSrGzkpF5KkM40csg2leky+YMTd"
@@ -156,7 +156,6 @@
       #app { grid-template-columns: minmax(190px, 43%) minmax(0, 1fr); }
       #status { left: calc(43% + 8px); }
       .legends { grid-template-columns: 1fr; }
-      .legend-zoning { display: none; }
     }
   </style>
   <link rel="stylesheet" href="map-theme.css">
@@ -170,7 +169,7 @@
       </div>
       <div class="legends">
         <section class="legend">
-          <h2>Integration capacity</h2>
+          <h2>Generation ICA</h2>
           <div class="key"><i class="swatch" style="background:#e76f00"></i>&lt;200 kW</div>
           <div class="key"><i class="swatch" style="background:#e6ab02"></i>200-299 kW</div>
           <div class="key"><i class="swatch" style="background:#15583b"></i>&ge;300 kW</div>
@@ -178,20 +177,17 @@
         </section>
         <section class="legend legend-zoning">
           <h2>Candidate zoning</h2>
-          <div class="key"><i class="swatch zone" style="background:#1f78b4"></i>Industrial</div>
-          <div class="key"><i class="swatch zone" style="background:#6a3d9a"></i>Remote residential</div>
-          <div class="key"><i class="swatch zone" style="background:#e31a1c"></i>Rural residential</div>
-          <div class="key"><i class="swatch zone" style="background:#8c6d31"></i>Rangeland</div>
+          <div id="zone-legend" aria-live="polite"></div>
         </section>
       </div>
       <div class="filters" aria-label="Candidate filters">
         <label><input id="hide-west" type="checkbox" checked>
-          Hide west of Highway 1</label>
+          Show only east of Highway 1</label>
         <label><input id="hide-zero-ica" type="checkbox" checked>
-          Hide zero PV ICA</label>
+          Show only non-zero ICA</label>
       </div>
       <div class="candidate-heading">
-        <h2>Best candidates in view</h2>
+        <h2>Best showing</h2>
         <span id="visible-count"></span>
       </div>
       <ol id="candidate-list"></ol>
@@ -221,6 +217,7 @@
     const leaders = document.querySelector("#leaders");
     const status = document.querySelector("#status");
     const visibleCount = document.querySelector("#visible-count");
+    const zoneLegend = document.querySelector("#zone-legend");
     const hideWest = document.querySelector("#hide-west");
     const hideZeroIca = document.querySelector("#hide-zero-ica");
     let candidates = [];
@@ -326,26 +323,57 @@
     function candidateId(feature) {
       return String(feature.properties.site_apns);
     }
+    function renderZoneLegend() {
+      const counts = new Map();
+      for (const feature of visibleCandidates) {
+        const zone = clean(feature.properties.BASEZONE) || "Unclassified";
+        counts.set(zone, (counts.get(zone) || 0) + 1);
+      }
+      const preferredOrder = [
+        "AG", "FL", "TP", "RL", "I", "RR", "RMR", "PF", "OS", "Unclassified"
+      ];
+      const order = new Map(preferredOrder.map((zone, index) => [zone, index]));
+      const zones = [...counts].sort(([left], [right]) =>
+        (order.get(left) ?? preferredOrder.length) -
+          (order.get(right) ?? preferredOrder.length)
+        || left.localeCompare(right)
+      );
+      zoneLegend.replaceChildren();
+      if (!zones.length) {
+        zoneLegend.textContent = "No candidates in view";
+        return;
+      }
+      for (const [zone, count] of zones) {
+        const key = document.createElement("div");
+        key.className = "key";
+        const swatch = document.createElement("i");
+        swatch.className = "swatch zone";
+        swatch.style.background = zoneColors[zone] || zoneColors.Unclassified;
+        key.append(swatch, `${zoneLabels[zone] || zone} (${count})`);
+        zoneLegend.append(key);
+      }
+    }
     function passesCandidateFilters(feature) {
       const properties = feature.properties;
-      if (hideWest.checked && clean(properties.highway_1_side).toLowerCase() === "west") {
+      const highwaySide = clean(properties.highway_1_side).toLowerCase();
+      if (hideWest.checked && ["west", "crosses"].includes(highwaySide)) {
         return false;
       }
-      const pvIca = Number(properties.pge_GenericPVCapacity_kW);
+      const generationIca = Number(properties.pge_GenCapacity_kW);
       return !(hideZeroIca.checked
-        && properties.pge_GenericPVCapacity_kW !== null
-        && Number.isFinite(pvIca)
-        && pvIca === 0);
+        && properties.pge_GenCapacity_kW !== null
+        && Number.isFinite(generationIca)
+        && generationIca === 0);
     }
     function candidateMapFilter() {
       const conditions = ["all"];
       if (hideWest.checked) {
-        conditions.push(["!=", ["get", "highway_1_side"], "west"]);
+        conditions.push(["==", ["get", "highway_1_side"], "east"]);
       }
       if (hideZeroIca.checked) {
         conditions.push([
           "!=",
-          ["coalesce", ["get", "pge_GenericPVCapacity_kW"], -1],
+          ["coalesce", ["get", "pge_GenCapacity_kW"], -1],
           0
         ]);
       }
@@ -374,9 +402,9 @@
         <span>Jurisdiction</span><b>${esc(properties.planning_jurisdiction)}</b>
         <span>Zoning</span><b>${esc(zoneLabels[zone] || zone)}</b>
         <span>Suitable land</span><b>${Number(properties.contiguous_acres).toFixed(1)} acres</b>
-        <span>Generic generation ICA</span><b>${formatIca(properties.pge_GenCapacity_kW)}</b>
-        <span>Generic PV ICA</span><b>${formatIca(properties.pge_GenericPVCapacity_kW)}</b>
-        <span>Nearest section</span><b>${Number(properties.pge_distance_m).toFixed(0)} m</b>
+        <span>Generation ICA</span><b>${formatIca(properties.pge_GenCapacity_kW)}</b>
+        <span>PV ICA (secondary)</span><b>${formatIca(properties.pge_GenericPVCapacity_kW)}</b>
+        <span>Minimum 12 kV distance</span><b>${Number(properties.pge_distance_m).toFixed(0)} m</b>
       </div>`;
     }
     function renderCandidateList() {
@@ -410,7 +438,7 @@
           <span class="address">${esc(address(properties))}</span>
           <span class="details">County #${esc(properties.rank)} &middot;
           ${esc(zoneLabels[zone] || zone)} &middot;
-          ${formatIca(properties.pge_GenericPVCapacity_kW)} ICA</span>`;
+          ${formatIca(properties.pge_GenCapacity_kW)} generation ICA</span>`;
         button.addEventListener("click", () => {
           if (activeApn === candidateId(item.feature)) {
             activeApn = null;
@@ -445,6 +473,7 @@
         .filter(feature => intersectsView(feature, bounds))
         .filter(passesCandidateFilters)
         .sort((left, right) => Number(right.properties.score) - Number(left.properties.score));
+      renderZoneLegend();
       if (!visibleCandidates.some(feature => candidateId(feature) === activeApn)) {
         activeApn = null;
       }
@@ -505,9 +534,9 @@
         paint: {
           "line-color": [
             "case",
-            ["<", ["coalesce", ["get", "GenericPVCapacity_kW"], -1], 0], "#7b817e",
-            ["<", ["coalesce", ["get", "GenericPVCapacity_kW"], -1], 200], "#e76f00",
-            ["<", ["get", "GenericPVCapacity_kW"], 300], "#e6ab02",
+            ["<", ["coalesce", ["get", "GenCapacity_kW"], -1], 0], "#7b817e",
+            ["<", ["coalesce", ["get", "GenCapacity_kW"], -1], 200], "#e76f00",
+            ["<", ["get", "GenCapacity_kW"], 300], "#e6ab02",
             "#15583b"
           ],
           "line-width": 4

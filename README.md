@@ -146,7 +146,8 @@ Useful output fields include:
 - `scope_grid_distance_m`, `scope_anchor_fraction`, and `scope_anchor_label`
 - `gross_acres`, `screenable_acres`, and `contiguous_acres`
 - `flat_fraction`, `open_fraction`, and `mean_slope_deg`
-- `pge_distance_m`, line section, voltage, phase count, and published ICA
+- `pge_distance_m` (minimum straight-line distance to the nearest mapped 12 kV
+  ICA section), line section, voltage, phase count, and published ICA
 - feeder customer, distributed-generation, and load-profile summaries
 - `transmission_distance_m`
 - `highway_1_side`, distance, terrain-viewshed exposure, visible highway
@@ -167,11 +168,11 @@ Open both GeoJSON files in QGIS. Add current aerial imagery and inspect:
 5. The reason each promising near miss failed.
 
 The CSV can be sorted directly. For example, to find storage candidates on
-sections with no published static PV ICA, filter:
+sections with no published generation ICA, filter:
 
 ```text
 eligible == True
-pge_GenericPVCapacity_kW == 0
+pge_GenCapacity_kW == 0
 ```
 
 Those are especially relevant for solar-plus-storage, controlled-export, or
@@ -257,8 +258,8 @@ as follows:
    Industrial reuse candidates may also use low-intensity developed classes 21
    and 22.
 10. Join nearby PG&E three-phase distribution sections and feeder information.
-11. Calculate solar resource, local-demand, infrastructure, land, and
-    development metrics.
+11. Calculate solar resource, infrastructure, land, and development metrics;
+    retain feeder demand and transmission proximity as diagnostics.
 
 Current hard eligibility requires:
 
@@ -267,10 +268,19 @@ Current hard eligibility requires:
 - The development-intensity threshold described above
 
 The primary weighted score combines contiguous land, flatness, allowed cover,
-low development intensity, industrial reuse, distribution and transmission
-proximity, feeder residential customers, feeder peak demand, static PV ICA,
-solar climatology, and low terrain visibility from Highway 1. Static ICA is
-deliberately a small scoring factor, not a hard gate.
+low development intensity, 12 kV distance, generation ICA, solar climatology,
+and low terrain visibility from Highway 1. Both 12 kV distance and generation
+ICA carry 22.5 percent of the score. PV ICA, feeder statistics, industrial
+reuse, and transmission distance remain available as context but do not
+affect rank.
+
+Distribution proximity is already scored as
+`exp(-pge_distance_m / 1,000)`. The distance is measured from the screened
+candidate geometry to the nearest mapped ICA line section that supplies the
+site's ICA values. It is a lower-bound, straight-line diagnostic, not an
+engineered extension route: conductor routing, access, easements, poles,
+switching, and the utility-selected point of interconnection can increase
+actual connection length and cost.
 
 The scenic model samples official Route 1 geometry every 100 meters and tests
 terrain line-of-sight to nine representative cells in each site's largest
@@ -293,8 +303,10 @@ Program fields are not interpreted as legal entitlement.
 
 ## Critical interpretation: solar plus storage
 
-Static ICA describes an **uncontrolled distribution-export screen**, not the
-maximum amount of solar that can be installed on a parcel.
+Generation ICA describes an **uncontrolled distribution-export screen**, not
+the maximum amount of solar that can be installed on a parcel. It is the
+primary ICA metric here because the study assumes battery-backed generation;
+PV ICA remains a secondary reference.
 For example, APN `1180901200` has approximately 25.8 contiguous open/flat acres
 and land capacity well above 1 MW, but its nearby 12 kV section publishes only
 128 kW of general-generation ICA and 186 kW of generic-PV capacity.
@@ -305,8 +317,8 @@ time-varying limit. Installed PV power, daily generated energy, battery charge
 power, battery energy, and grid export power are different quantities.
 
 The existing `screened_project_mw` field is therefore conservative: it is the
-minimum of land potential, static ICA, and minimum daytime feeder load. Do not
-interpret it as the parcel's maximum feasible PV nameplate.
+minimum of land potential, generation ICA, and minimum daytime feeder load. Do
+not interpret it as the parcel's maximum feasible PV nameplate.
 
 California Rule 21 Limited Generation Profiles may permit nameplate capacity
 above static hosting capacity when certified controls enforce an approved

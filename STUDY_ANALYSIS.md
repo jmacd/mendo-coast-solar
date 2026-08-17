@@ -123,6 +123,8 @@ It records:
 
 - Feeder and substation
 - Line-section identifier
+- Minimum straight-line distance from the screened candidate geometry to that
+  mapped 12 kV ICA section
 - Nominal voltage and phase count
 - General generation ICA
 - Generic-PV ICA
@@ -132,8 +134,14 @@ It records:
 
 The initial model required three-phase service and at least 500 kW of
 published general-generation ICA. The storage-oriented revision retains the
-three-phase and distance gates, reports both ICA values, and treats static PV
-ICA as a small score rather than a hard threshold.
+three-phase and distance gates, uses generation ICA as a small score rather
+than a hard threshold, and reports PV ICA as secondary context.
+
+The same section distance drives the distribution-proximity score:
+`exp(-distance / 1,000 meters)`. It is a lower bound rather than a designed
+connection route. The utility-selected interconnection point, conductor route,
+access, easements, poles, and switching can make the actual extension longer
+and more expensive.
 
 ### Feeder demand
 
@@ -247,14 +255,15 @@ The revised primary ranking assumes the objective is solar plus storage serving
 local coastal homes. It:
 
 - Removes static ICA as a hard eligibility gate.
-- Rewards feeder residential customers and feeder peak demand.
+- Gives generation ICA and minimum 12 kV distance 22.5 percent each.
 - Uses a 1 MW PV / 4 MWh battery reference case for comparable reporting.
-- Reports the static PV export limit and reference-project export gap.
+- Reports the generation ICA export limit and reference-project export gap.
 - Reports controlled-export, distribution-upgrade, and nearby-transmission
   study paths without treating them as approvals.
 - Combines multiple source geometry sections sharing one APN.
 - Allows low-intensity developed NLCD classes on industrial reuse sites.
-- Gives industrial reuse an explicit but limited score.
+- Reports industrial reuse, feeder demand, and transmission proximity without
+  using them in the score.
 - Retains wetland and other planning exclusions as measured acreage losses.
 - Excludes County Open Space (`OS`) zoning.
 - Rewards low terrain visibility from Highway 1.
@@ -329,7 +338,7 @@ The revised result is:
 | Reference battery | 4.00 MWh |
 | Reference annual generation | 1,546 MWh |
 | Reference average power | 176 kW |
-| Static generic-PV ICA | 167 kW |
+| Generation ICA | 167 kW |
 | Reference static export gap | 833 kW |
 | Feeder residential customers | 2,730 |
 | Feeder peak load | 3.84 MW |
@@ -395,10 +404,11 @@ Expanding the scope beyond the Coastal Zone revealed APN `1185001100` at
 geometry lies inside the Coastal Zone, so the previous boundary clip omitted
 most of the site. The revised screen estimates 31.6 contiguous suitable acres
 on 43.2 gross acres. Its nearest mapped section intersects the parcel and
-publishes 186 kW of generic-PV ICA, the same static-PV value assigned to Fern
-Creek. It ranks second overall and warrants direct comparison with Fern Creek,
-subject to confirming Public Facilities zoning, ownership, existing uses,
-access, environmental constraints, and interconnection feasibility.
+publishes 128 kW of generation ICA and 186 kW of PV ICA, the same values
+assigned to Fern Creek. It ranks second overall and warrants direct comparison
+with Fern Creek, subject to confirming Public Facilities zoning, ownership,
+existing uses, access, environmental constraints, and interconnection
+feasibility.
 
 These Caspar parcels illustrate why published ICA is reported as a diagnostic
 rather than used as a minimum threshold:
@@ -640,9 +650,9 @@ published ICA values without using either as a minimum threshold.
 
 For the project now under consideration, APN `1180901200` should be treated as
 a strong strategic candidate for solar plus storage. A 1 MW array is not
-contradicted by the 186 kW static-PV figure if approved controls, storage, and curtailment
-keep export within an acceptable envelope. The nearby 60 kV line may create a
-second, larger interconnection option. Both paths require formal engineering
+contradicted by the 128 kW generation ICA figure if approved controls, storage,
+and curtailment keep export within an acceptable envelope. The nearby 60 kV
+line may create a second, larger interconnection option. Both paths require formal engineering
 and utility study, but neither is represented fairly by the static-ICA subset
 alone.
 

@@ -240,15 +240,11 @@ highway_viewshed_endpoint_clearance_m = 30.0
 90 = 12.0
 
 [analysis.weights]
-contiguous_land = 0.10
+contiguous_land = 0.05
 flat_fraction = 0.05
 open_land_cover = 0.03
 undeveloped = 0.10
-industrial_reuse = 0.07
-distribution_proximity = 0.08
-residential_demand = 0.16
-evening_peak_demand = 0.16
-solar_resource = 0.07
-grid_hosting_capacity = 0.02
-transmission_proximity = 0.01
+distribution_proximity = 0.225
+solar_resource = 0.17
+grid_hosting_capacity = 0.225
 low_highway_visibility = 0.15
