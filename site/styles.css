@@ -81,6 +81,7 @@ h1 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(3rem, 6vw,
 .snapshot span { color: #cbdad1; font-size: 0.82rem; }
 
 .section { margin: 0 auto; max-width: 1180px; padding: 7rem 1.5rem; }
+.section[id] { scroll-margin-top: 5rem; }
 .section-heading { max-width: 760px; }
 .section-heading h2, .closing h2 { font-family: Georgia, serif; font-size: clamp(2.35rem, 4vw, 4.25rem); font-weight: 500; letter-spacing: -0.035em; margin: 0.2rem 0 1rem; }
 .section-heading > p:last-child { color: var(--muted); font-size: 1.08rem; }
@@ -140,6 +141,10 @@ h1 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(3rem, 6vw,
 .source-grid { margin-top: 2.5rem; grid-template-columns: repeat(2, 1fr); }
 .source-links { margin-top: 2rem; text-align: center; }
 .source-links span { color: var(--line); margin: 0 .6rem; }
+.download-sources { border-top: 1px solid var(--line); margin-top: 5rem; padding-top: 4rem; }
+.download-sources h2 { font-family: Georgia, serif; font-size: clamp(2.35rem, 4vw, 4.25rem); font-weight: 500; letter-spacing: -0.035em; margin: 0.2rem 0 2rem; }
+.source-list { columns: 2; column-gap: 3rem; padding-left: 1.25rem; }
+.source-list li { break-inside: avoid; margin-bottom: 1.25rem; }
 .closing { border-top: 1px solid var(--line); text-align: center; }
 .closing .actions { justify-content: center; }
 .site-footer { background: var(--green-dark); color: #d7e2dc; display: flex; font-size: 0.76rem; justify-content: space-between; padding: 2rem max(1.5rem, calc((100vw - 1180px) / 2)); }
@@ -169,5 +174,6 @@ h1 { font-family: Georgia, "Times New Roman", serif; font-size: clamp(3rem, 6vw,
   .grid-explorer-frame, .county-grid-frame { height: 42rem; }
   .grid-map { margin: 0 auto; max-height: 28rem; width: auto; }
   .transmission-layout .finding-grid { padding-left: 0; }
+  .source-list { columns: 1; }
   .site-footer { display: block; }
 }

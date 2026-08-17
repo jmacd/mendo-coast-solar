@@ -11,9 +11,9 @@
   <header class="site-header">
     <a class="wordmark" href="./">Mendocino Coast Solar</a>
     <nav aria-label="Primary navigation">
-      <a href="#method">Method</a>
-      <a href="#grid">Grid</a>
-      <a href="#sources">Sources</a>
+      <a href="#transmission">Transmission</a>
+      <a href="#local-generation">Generation</a>
+      <a href="#motivation">Motivation</a>
       <a class="nav-cta" href="candidate-map.html">Explore the data</a>
     </nav>
   </header>
@@ -31,8 +31,8 @@
           grid-scale solar in residential zones<sup>*</sup>.</p>
         <div class="actions">
           <a class="button primary" href="candidate-map.html">Open the map</a>
-          <a class="button secondary" href="downloads.html">Explore the data</a>
-        </div>
+            <a class="button secondary" href="downloads.html">Downloads</a>
+          </div>
         <p class="caveat"><sup>*</sup>See below</p>
       </div>
       <div class="hero-art" aria-hidden="true">
@@ -50,7 +50,7 @@
 
     <section class="snapshot" aria-hidden="true"></section>
 
-    <section class="section transmission-story">
+    <section id="transmission" class="section transmission-story">
       <div class="transmission-intro">
         <div class="section-heading">
           <p class="eyebrow">The edge of the grid</p>
@@ -117,7 +117,7 @@
 
     <div class="section-separator" aria-hidden="true"></div>
 
-    <section class="section transmission-story local-grid-story">
+    <section id="local-generation" class="section transmission-story local-grid-story">
       <div class="transmission-intro">
         <div class="section-heading">
           <p class="eyebrow">Local generation</p>
@@ -193,7 +193,7 @@
       </div>
     </section>
 
-    <section id="method" class="section method">
+    <section id="motivation" class="section method">
       <div class="section-heading">
         <p class="eyebrow">Motivation</p>
         <h2>Why we made this site.</h2>
@@ -219,9 +219,9 @@
       </div>
     </section>
 
-    <section id="method" class="section method">
+    <section id="findings" class="section method">
       <div class="section-heading">
-        <p class="eyebrow">Analysis</p>
+        <p class="eyebrow">Energy has limits</p>
         <h2>What we learned about solar on the Mendocino coast.</h2>
         <p>
           To develop a grid-scale solar facility on the Mendocino
@@ -237,57 +237,53 @@
       </div>
     </section>
 
-    <section id="method" class="section method">
+    <section id="candidate-analysis" class="section method">
+      <div class="section-heading">
+        <p class="eyebrow">Candidate analysis</p>
+        <h2>How were the candidates identified?</h2>
+        <p>
+          The study starts with all Mendocino APNs with at least 10
+          acres followed by exclusion and elimination for various
+          reasons:
+        </p>
+          <ul>
+            <li>Sites more than 1km from PG&amp;E's 12kV coastal distribution network
+            <li>California prime, important, or unique farmland.
+            <li>Protected areas including wetlands
+            <li>Sites with improvement value above $10,000 per acre
+            <li>Sections that slope more than 10 degrees
+            <li>Open Space zoning.
+          </ul>
+        <p>
+          Candidates were then ranked according to ICA number,
+          distance from the distribution lines, and highway
+          visibility.
+        </p>
+      </div>
+    </section>
+    
+    <section id="results" class="section method">
       <div class="section-heading">
         <p class="eyebrow">Analysis</p>
         <h2>How many grid-scale solar generation facilities are there
-          on the Mendocino coast?</h2>
+          on the Mendocino coast? How many could there be?</h2>
         <p>
           There are no grid-scale solar projects on the Mendocino
-          Coast, despite there being 91 candidate sites east of
-          Highway 1 with AG/FL/TP/RL/I zoning.
+          Coast, despite there being over seventy candidate sites east
+          of Highway 1 with AG/FL/TP/RL/I zoning and available
+          interconnection capacity. There are are 60 Rangeland, 7
+          Agricultural, 4 Forest Lands, 2 Timberland Production, and 1
+          Industrial parcel with compatible zoning.
+        </p>
         <p>
+          Among the other zoning categories identified as candidates
+          that are east of Highway 1 and with available
+          interconnection capacity: 5 Rural Residential, 2 Remote
+          Residential, 2 Public Facilities, and 5 in the Point Arena
+          municipal zone.
+        </p>
       </div>
     </section>
 
-    <section id="sources" class="section sources">
-      <div class="section-heading">
-        <p class="eyebrow">Public data foundation</p>
-        <h2>Built from sources anyone can inspect</h2>
-      </div>
-      <div class="source-grid">
-        <article><h3>Land and planning</h3><p>Mendocino County parcels and zoning,
-          California Coastal Zone, Fort Bragg boundary, protected lands,
-          important farmland, wetlands, and CAL FIRE hazard zones.</p></article>
-        <article><h3>Terrain and cover</h3><p>USGS 3DEP elevation and NLCD 2021
-          land cover measure slope, connected open land, and conservative
-          vegetation screening in the Highway 1 viewshed.</p></article>
-        <article><h3>Electric grid</h3><p>PG&amp;E ICA line sections, feeder
-          characteristics and load profiles, plus California Energy Commission
-          transmission geometry.</p></article>
-        <article><h3>Sun and visibility</h3><p>NASA POWER solar climatology and
-          official Caltrans Highway 1 geometry support resource and scenic-exposure
-          screening.</p></article>
-      </div>
-      <p class="source-links"><a href="provenance.json">View retrieval provenance</a>
-        <span>·</span> <a href="downloads.html">Download generated results</a>
-        <span>·</span> <a href="https://github.com/jmacd/mendo-coast-solar">Read the source code</a></p>
-    </section>
-
-    <section class="section closing">
-      <p class="eyebrow">Continue the investigation</p>
-      <h2>See every candidate, assumption, and diagnostic.</h2>
-      <div class="actions">
-        <a class="button primary" href="candidate-map.html">Explore the ranked map</a>
-        <a class="button secondary" href="downloads.html">Download results</a>
-      </div>
-    </section>
-  </main>
-
-  <footer class="site-footer">
-    <p>Mendocino Coast Solar Siting Study · Open source and reproducible</p>
-    <p>This regional screen is not a permit, survey, biological assessment,
-      engineering design, or interconnection determination.</p>
-  </footer>
 </body>
 </html>

@@ -9,20 +9,81 @@
 <body>
   <header class="site-header">
     <a class="wordmark" href="./">Mendocino Coast Solar</a>
-    <nav aria-label="Primary navigation"><a class="nav-cta" href="candidate-map.html">Explore candidates</a></nav>
+    <nav aria-label="Primary navigation">
+      <a href="./">Story</a>
+      <a class="nav-cta" href="candidate-map.html">Explore candidates</a>
+    </nav>
   </header>
-  <main class="section">
+  <main class="section downloads">
     <p class="eyebrow">Open data</p>
     <h1>Study downloads</h1>
-    <p class="lede">Generated results from the latest published analysis.</p>
+    <p class="lede">
+      Generated results and map layers from the latest published analysis.
+      See the provenance file for retrieval dates, record counts, and hashes.
+    </p>
     <div class="source-grid">
-      <article><h3>Ranked candidates</h3><p>Eligible solar-storage
-        candidates, ordered by the weighted score.</p><p><a href="ranked-parcels.csv">CSV</a> · <a href="ranked-parcels.geojson">GeoJSON</a></p></article>
-      <article><h3>All screened parcels</h3><p>Eligible and ineligible parcels
-        with diagnostic fields and failed gates.</p><p><a href="screened-parcels.csv">CSV</a> · <a href="screened-parcels.geojson">GeoJSON</a></p></article>
-      <article><h3>Report and provenance</h3><p>Run summary, limitations, source
-        URLs, retrieval times, counts, and hashes.</p><p><a href="report.md">Report</a> · <a href="provenance.json">Provenance</a></p></article>
+      <article>
+        <h3>Ranked candidates</h3>
+        <p>Eligible solar-storage candidates, ordered by weighted score.</p>
+        <p><a href="ranked-parcels.csv">CSV</a> ·
+          <a href="ranked-parcels.geojson">GeoJSON</a></p>
+      </article>
+      <article>
+        <h3>All screened parcels</h3>
+        <p>Eligible and ineligible parcels with diagnostics and failed gates.</p>
+        <p><a href="screened-parcels.csv">CSV</a> ·
+          <a href="screened-parcels.geojson">GeoJSON</a></p>
+      </article>
+      <article>
+        <h3>Generated map layers</h3>
+        <p>
+          <a href="grid-candidates.geojson">Candidates</a> ·
+          <a href="ica-sections.geojson">ICA sections</a> ·
+          <a href="distribution-grid.geojson">Distribution grid</a> ·
+          <a href="distribution-substations.geojson">Substations</a> ·
+          <a href="transmission-lines.geojson">Transmission</a> ·
+          <a href="county-boundary.geojson">County boundary</a>
+        </p>
+      </article>
+      <article>
+        <h3>Report and provenance</h3>
+        <p>Run summary, limitations, source URLs, retrieval times, and hashes.</p>
+        <p><a href="report.md">Report</a> ·
+          <a href="provenance.json">Provenance</a></p>
+      </article>
     </div>
+
+    <section class="download-sources">
+      <p class="eyebrow">Inputs</p>
+      <h2>Data sources</h2>
+      <ul class="source-list">
+        <li><strong>Mendocino County:</strong>
+          <a href="https://services9.arcgis.com/wwVnNW92ZHUIr0V0/arcgis/rest/services/Coastal_Zone_Polygon/FeatureServer/0">Coastal Zone</a> and
+          <a href="https://services2.arcgis.com/iq8zYa0SRsvIFFKz/arcgis/rest/services/Mendocino_County_Parcels/FeatureServer/0">parcels</a></li>
+        <li><strong>California geographic data:</strong>
+          <a href="https://services3.arcgis.com/uknczv4rpevve42E/arcgis/rest/services/California_Cities_and_Identifiers_Blue_Version_view/FeatureServer/2">city limits</a> and
+          <a href="https://services1.arcgis.com/jUJYIo9tSA7EHvfZ/arcgis/rest/services/California_County_Boundaries/FeatureServer/0">county boundaries</a></li>
+        <li><strong>Environmental constraints:</strong>
+          <a href="https://fwspublicservices.wim.usgs.gov/wetlandsmapservice/rest/services/Wetlands/MapServer/0">USFWS wetlands</a>,
+          <a href="https://services2.arcgis.com/Uq9r85Potqm3MfRV/ArcGIS/rest/services/CPAD_Holdings_wm/FeatureServer/0">California protected lands</a>,
+          <a href="https://gis.conservation.ca.gov/server/rest/services/DLRP/CaliforniaImportantFarmland_mostrecent/MapServer/0">important farmland</a>, and
+          <a href="https://services1.arcgis.com/jUJYIo9tSA7EHvfZ/ArcGIS/rest/services/FHSZSRA_23_3/FeatureServer/0">fire hazard zones</a></li>
+        <li><strong>Transportation and transmission:</strong>
+          <a href="https://caltrans-gis.dot.ca.gov/arcgis/rest/services/CHhighway/SHN_Lines/FeatureServer/0">Caltrans Highway 1</a> and
+          <a href="https://services3.arcgis.com/bWPjFyq029ChCGur/arcgis/rest/services/Transmission_Line/FeatureServer/2">California transmission lines</a></li>
+        <li><strong>PG&amp;E Distribution Resources Planning:</strong>
+          <a href="https://services2.arcgis.com/mJaJSax0KPHoCNB6/ArcGIS/rest/services/DRPComplianceRelProd/FeatureServer/3">ICA sections</a>,
+          <a href="https://services2.arcgis.com/mJaJSax0KPHoCNB6/ArcGIS/rest/services/DRPComplianceRelProd/FeatureServer/2">feeders</a>,
+          <a href="https://services2.arcgis.com/mJaJSax0KPHoCNB6/ArcGIS/rest/services/DRPComplianceRelProd/FeatureServer/0">substations</a>,
+          <a href="https://services2.arcgis.com/mJaJSax0KPHoCNB6/ArcGIS/rest/services/DRPComplianceRelProd/FeatureServer/5">transmission lines</a>, and
+          <a href="https://services2.arcgis.com/mJaJSax0KPHoCNB6/ArcGIS/rest/services/DRPComplianceRelProd/FeatureServer/23">load profiles</a></li>
+        <li><strong>Terrain and land cover:</strong>
+          <a href="https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer">USGS 3DEP elevation</a> and
+          <a href="https://www.mrlc.gov/geoserver/mrlc_display/wcs">NLCD 2021 land cover</a></li>
+        <li><strong>Solar resource:</strong>
+          <a href="https://power.larc.nasa.gov/api/temporal/climatology/regional">NASA POWER climatology</a></li>
+      </ul>
+    </section>
   </main>
 </body>
 </html>
