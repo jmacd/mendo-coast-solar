@@ -17,7 +17,7 @@ ZONE_COLORS = {
     "OS": "#66c2a5",
     "I": "#1f78b4",
     "PF": "#7570b3",
-    "Unclassified": "#969696",
+    "U": "#969696",
 }
 
 ZONE_LABELS = {
@@ -30,7 +30,7 @@ ZONE_LABELS = {
     "OS": "Open Space",
     "I": "Industrial",
     "PF": "Public Facilities",
-    "Unclassified": "Unclassified",
+    "U": "Unclassified",
 }
 
 
@@ -48,13 +48,47 @@ def write_candidate_map(sites: gpd.GeoDataFrame, destination: Path) -> None:
     data = json.dumps(payload, separators=(",", ":")).replace("<", "\\u003c")
     colors = json.dumps(ZONE_COLORS, separators=(",", ":"))
     labels = json.dumps(ZONE_LABELS, separators=(",", ":"))
+    preferred_zones = ["AG", "FL", "TP", "RL", "I"]
+    observed_zones = sorted(set(web_sites["map_zone"]) - set(preferred_zones))
+    zone_rows = []
+    for zone in [*preferred_zones, *observed_zones, None]:
+        subset = web_sites if zone is None else web_sites[web_sites["map_zone"] == zone]
+        west_or_crossing = (
+            subset["highway_1_side"]
+            .fillna("")
+            .astype(str)
+            .str.lower()
+            .isin(["west", "crosses"])
+        )
+        zero_generation_ica = (
+            subset["pge_GenCapacity_kW"].notna()
+            & subset["pge_GenCapacity_kW"].astype(float).eq(0)
+        )
+        display_zone = "U" if zone == "Unclassified" else zone
+        zone_label = (
+            "Total"
+            if zone is None
+            else (
+                f'<span class="zone-code">{html_module.escape(display_zone)}</span>'
+                f'<span class="zone-name">{html_module.escape(ZONE_LABELS.get(zone, zone))}</span>'
+            )
+        )
+        row_class = ' class="total"' if zone is None else ""
+        zone_rows.append(
+            f"<tr{row_class}><th>{zone_label}</th>"
+            f"<td>{len(subset)}</td>"
+            f"<td>{int((~west_or_crossing).sum())}</td>"
+            f"<td>{int((~zero_generation_ica).sum())}</td>"
+            f"<td>{int((~west_or_crossing & ~zero_generation_ica).sum())}</td></tr>"
+        )
+    zone_count_rows = "".join(zone_rows)
 
     template = """<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Mendocino Coast solar-storage candidates</title>
+  <title>Mendocino Coast solar candidates</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
   <style>
@@ -78,8 +112,7 @@ def write_candidate_map(sites: gpd.GeoDataFrame, destination: Path) -> None:
     }
     h1 { font-size: 18px; line-height: 1.15; margin: 0 0 5px; }
     header p { color: #555; margin: 4px 0 10px; }
-    .controls { display: grid; gap: 7px; grid-template-columns: 1fr 125px; }
-    .controls input, .controls select {
+    .controls select {
       border: 1px solid #999;
       border-radius: 4px;
       font: inherit;
@@ -101,6 +134,38 @@ def write_candidate_map(sites: gpd.GeoDataFrame, destination: Path) -> None:
       gap: 5px;
     }
     .filter-controls input { accent-color: #173128; margin: 0; }
+    .zone-summary {
+      border-top: 1px solid #ddd;
+      margin-top: 9px;
+      padding-top: 7px;
+    }
+    .zone-summary summary {
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .zone-counts {
+      border-collapse: collapse;
+      font-size: 10px;
+      margin-top: 5px;
+      width: 100%;
+    }
+    .zone-counts th, .zone-counts td {
+      border-bottom: 1px solid #ddd;
+      padding: 2px 5px;
+    }
+    .zone-counts thead th {
+      background: white;
+      position: sticky;
+      text-align: right;
+      top: 0;
+    }
+    .zone-counts thead th:first-child,
+    .zone-counts tbody th { text-align: left; }
+    .zone-counts td { text-align: right; }
+    .zone-counts .zone-code { display: inline-block; font-weight: 750; width: 26px; }
+    .zone-counts .zone-name { color: #666; font-weight: 400; }
+    .zone-counts .total { background: #edf3ed; font-weight: 750; }
     #result-summary { color: #444; font-size: 12px; margin-top: 8px; }
     #infrastructure-status { color: #555; font-size: 11px; margin-top: 4px; }
     .station-label {
@@ -177,13 +242,6 @@ def write_candidate_map(sites: gpd.GeoDataFrame, destination: Path) -> None:
     .side-east { color: #176b2c; font-weight: 700; }
     .side-west { color: #a62620; font-weight: 700; }
     .side-crosses { color: #8a5700; font-weight: 700; }
-    footer {
-      background: white;
-      border-top: 1px solid #bbb;
-      color: #555;
-      font-size: 11px;
-      padding: 7px 12px;
-    }
     .leaflet-popup-content { min-width: 280px; }
     .leaflet-popup-content table { border-collapse: collapse; width: 100%; }
     .leaflet-popup-content th {
@@ -203,30 +261,41 @@ def write_candidate_map(sites: gpd.GeoDataFrame, destination: Path) -> None:
 <div id="app">
   <aside id="sidebar" class="map-sidebar">
     <header class="map-header">
-      <h1 class="map-title">Mendocino Coast solar-storage candidates</h1>
-      <p class="map-summary">Sort any column. Selecting a row locates its parcel; selecting a
-      parcel highlights its row.</p>
+      <h1 class="map-title">Mendocino Coast solar candidates</h1>
       <div class="controls">
-        <input id="search" type="search" placeholder="APN, address, feeder..."
-          aria-label="Search candidates">
         <select id="zone-filter" aria-label="Filter zoning">
           <option value="focus">AG/FL/TP/RL/I</option>
-          <option value="all">All zoning</option>
-          <option value="residential">Residential: RR and RMR</option>
           <option value="RR">Rural Residential: RR</option>
           <option value="RMR">Remote Residential: RMR</option>
           <option value="RL">Rangeland: RL</option>
           <option value="AG">Agricultural: AG</option>
           <option value="I">Industrial: I</option>
+          <option value="all">All zoning</option>
+          <option value="residential">Residential: RR and RMR</option>
           <option value="other">Other zoning</option>
         </select>
       </div>
       <div class="filter-controls" aria-label="Candidate exclusions">
         <label><input id="hide-west" type="checkbox" checked>
-          Exclude west of Highway 1</label>
+          Only show east of Highway 1</label>
         <label><input id="hide-zero-ica" type="checkbox" checked>
-          Exclude zero PV ICA</label>
+          Only show non-zero ICA</label>
       </div>
+      <details class="zone-summary">
+        <summary>Candidate counts by zone</summary>
+        <div class="zone-count-wrap">
+          <table class="zone-counts">
+            <thead><tr>
+              <th>Zone</th>
+              <th>All</th>
+              <th title="Show only east of Highway 1">East side</th>
+              <th title="Show only non-zero Generation ICA">ICA > 0</th>
+              <th title="Show both exclusions">Both</th>
+            </tr></thead>
+            <tbody>__ZONE_COUNT_ROWS__</tbody>
+          </table>
+        </div>
+      </details>
       <div id="result-summary"></div>
       <div id="infrastructure-status" role="status">Loading grid infrastructure...</div>
     </header>
@@ -240,8 +309,9 @@ def write_candidate_map(sites: gpd.GeoDataFrame, destination: Path) -> None:
           <th><button data-sort="score" data-type="number">Score</button></th>
           <th><button data-sort="contiguous_acres" data-type="number">Suitable ac</button></th>
           <th><button data-sort="gross_acres" data-type="number">Gross ac</button></th>
-          <th><button data-sort="pge_GenCapacity_kW" data-type="number">Generic ICA kW</button></th>
-          <th><button data-sort="pge_GenericPVCapacity_kW" data-type="number">PV ICA kW</button></th>
+          <th><button data-sort="pge_GenCapacity_kW" data-type="number">Generation ICA kW</button></th>
+          <th><button data-sort="pge_GenericPVCapacity_kW" data-type="number">PV ICA kW (secondary)</button></th>
+          <th><button data-sort="pge_distance_m" data-type="number">12 kV distance m</button></th>
           <th><button data-sort="highway_1_side">Hwy 1 side</button></th>
           <th><button data-sort="highway_1_distance_m" data-type="number">Hwy dist m</button></th>
           <th><button data-sort="highway_1_viewshed_exposure" data-type="number">Scenic exposure</button></th>
@@ -250,9 +320,6 @@ def write_candidate_map(sites: gpd.GeoDataFrame, destination: Path) -> None:
         <tbody id="candidate-rows"></tbody>
       </table>
     </main>
-    <footer>Screening candidates, not approved projects. Street and aerial
-      basemaps can be switched using the map control.
-      <a href="downloads.html">Download data and report</a>.</footer>
   </aside>
   <div id="map"></div>
 </div>
@@ -316,8 +383,8 @@ async function loadInfrastructure() {
       MapInfrastructure.tooltip(feature.properties, [
         ["FeederName", "Feeder"],
         ["CSV_LineSection", "Section"],
-        ["GenCapacity_kW", "Generic ICA kW"],
-        ["GenericPVCapacity_kW", "PV ICA kW"]
+        ["GenCapacity_kW", "Generation ICA kW"],
+        ["GenericPVCapacity_kW", "PV ICA kW (secondary)"]
       ], esc),
       { sticky: true }
     )
@@ -362,9 +429,7 @@ async function loadInfrastructure() {
     `Transmission (${voltages.join("/")} kV)`
   );
   layerControl.addOverlay(substationLayer, "Distribution substations");
-  layerControl.addOverlay(countyLayer, "Mendocino County boundary");
-  document.querySelector("#infrastructure-status").textContent =
-    `${substations.features.length} feeder substations shown`;
+  document.querySelector("#infrastructure-status").hidden = true;
 }
 
 function esc(value) {
@@ -378,6 +443,9 @@ function number(value, digits = 1) {
 }
 function humanize(value) {
   return String(value ?? "").replaceAll("_", " ");
+}
+function zoneCode(zone) {
+  return zone === "Unclassified" ? "U" : zone;
 }
 function address(properties) {
   const clean = value => {
@@ -403,7 +471,7 @@ function popup(properties) {
   return `<strong>Rank ${esc(properties.rank)}: ${esc(properties.site_apns)}</strong>
     <div>${esc(address(properties))}</div>
     <table>
-      <tr><th>Zone</th><td>${esc(properties.map_zone)} - ${esc(labels[properties.map_zone] || "")}</td></tr>
+      <tr><th>Zone</th><td>${esc(zoneCode(properties.map_zone))} - ${esc(labels[properties.map_zone] || "")}</td></tr>
       <tr><th>__ANCHOR_LABEL__</th><td>${number(Number(properties.scope_anchor_fraction) * 100, 0)}% of parcel</td></tr>
       <tr><th>Grid-scope distance</th><td>${number(properties.scope_grid_distance_m, 0)} m</td></tr>
       <tr><th>Score</th><td>${number(properties.score, 3)}</td></tr>
@@ -412,8 +480,9 @@ function popup(properties) {
       <tr><th>Reference system</th><td>${number(properties.reference_project_mw)} MW PV / ${number(properties.reference_battery_mwh)} MWh</td></tr>
       <tr><th>Feeder</th><td>${esc(properties.pge_FeederName)}</td></tr>
       <tr><th>Feeder peak</th><td>${number(Number(properties.pge_profile_peak_load_kw) / 1000, 2)} MW</td></tr>
-      <tr><th>Generic ICA</th><td>${number(properties.pge_GenCapacity_kW, 0)} kW</td></tr>
-      <tr><th>Generic PV ICA</th><td>${number(properties.pge_GenericPVCapacity_kW, 0)} kW</td></tr>
+      <tr><th>Generation ICA</th><td>${number(properties.pge_GenCapacity_kW, 0)} kW</td></tr>
+      <tr><th>PV ICA (secondary)</th><td>${number(properties.pge_GenericPVCapacity_kW, 0)} kW</td></tr>
+      <tr><th>Minimum 12 kV distance</th><td>${number(properties.pge_distance_m, 0)} m to the mapped ICA section</td></tr>
       <tr><th>Highway 1</th><td>${esc(properties.highway_1_side)}, ${number(properties.highway_1_distance_m, 0)} m</td></tr>
       <tr><th>Scenic exposure</th><td>${number(Number(properties.highway_1_viewshed_exposure) * 100, 1)}%; visible from about ${number(properties.highway_1_visible_length_m, 0)} m of highway</td></tr>
       <tr><th>Nearest visible view</th><td>${number(properties.highway_1_nearest_visible_distance_m, 0)} m</td></tr>
@@ -451,13 +520,14 @@ for (const item of items) {
     <td class="number rank">${esc(properties.rank)}</td>
     <td><span class="apn">${esc(properties.site_apns)}</span>
       <span class="address">${esc(address(properties))}</span></td>
-    <td><span class="zone">${esc(zone)}</span></td>
+    <td><span class="zone" title="${esc(labels[zone] || zone)}">${esc(zoneCode(zone))}</span></td>
     <td class="number">${number(Number(properties.scope_anchor_fraction) * 100, 0)}%</td>
     <td class="number">${number(properties.score, 3)}</td>
     <td class="number">${number(properties.contiguous_acres)}</td>
     <td class="number">${number(properties.gross_acres)}</td>
     <td class="number">${number(properties.pge_GenCapacity_kW, 0)}</td>
     <td class="number">${number(properties.pge_GenericPVCapacity_kW, 0)}</td>
+    <td class="number">${number(properties.pge_distance_m, 0)}</td>
     <td class="side-${esc(properties.highway_1_side)}">${esc(properties.highway_1_side)}</td>
     <td class="number">${number(properties.highway_1_distance_m, 0)}</td>
     <td class="number">${number(Number(properties.highway_1_viewshed_exposure) * 100, 1)}%</td>
@@ -528,25 +598,21 @@ function zoneMatches(zone, filter) {
   return zone === filter;
 }
 function applyFilters(fitMap = false) {
-  const query = document.querySelector("#search").value.trim().toLowerCase();
   const zoneFilter = document.querySelector("#zone-filter").value;
   const hideWest = document.querySelector("#hide-west").checked;
   const hideZeroIca = document.querySelector("#hide-zero-ica").checked;
   const visibleLayers = [];
   for (const item of items) {
     const properties = item.feature.properties;
-    const text = [
-      properties.site_apns, properties.SITUS_ADD, properties.SITUS_CTY,
-      properties.map_zone, labels[properties.map_zone],
-      properties.pge_FeederName
-    ].join(" ").toLowerCase();
-    const pvIca = Number(properties.pge_GenericPVCapacity_kW);
-    const hasZeroIca = properties.pge_GenericPVCapacity_kW !== null
-      && Number.isFinite(pvIca)
-      && pvIca === 0;
+    const generationIca = Number(properties.pge_GenCapacity_kW);
+    const hasZeroIca = properties.pge_GenCapacity_kW !== null
+      && Number.isFinite(generationIca)
+      && generationIca === 0;
+    const westOrCrossing = ["west", "crosses"].includes(
+      properties.highway_1_side
+    );
     const visible = zoneMatches(properties.map_zone, zoneFilter)
-      && (!query || text.includes(query))
-      && !(hideWest && properties.highway_1_side === "west")
+      && !(hideWest && westOrCrossing)
       && !(hideZeroIca && hasZeroIca);
     item.row.hidden = !visible;
     if (visible && !item.visible) item.layer.addTo(map);
@@ -560,7 +626,6 @@ function applyFilters(fitMap = false) {
     map.fitBounds(L.featureGroup(visibleLayers).getBounds(), { padding: [20, 20] });
   }
 }
-document.querySelector("#search").addEventListener("input", () => applyFilters(false));
 document.querySelector("#zone-filter").addEventListener("change", () => applyFilters(true));
 document.querySelector("#hide-west").addEventListener("change", () => applyFilters(true));
 document.querySelector("#hide-zero-ica").addEventListener("change", () => applyFilters(true));
@@ -568,7 +633,9 @@ sortRows();
 applyFilters(true);
 if (items.length) selectItem(items[0], false, false);
 loadInfrastructure().catch(error => {
-  document.querySelector("#infrastructure-status").textContent = error.message;
+  const status = document.querySelector("#infrastructure-status");
+  status.hidden = false;
+  status.textContent = error.message;
 });
 </script>
 </body>
@@ -579,5 +646,6 @@ loadInfrastructure().catch(error => {
         .replace("__COLORS__", colors)
         .replace("__LABELS__", labels)
         .replace("__ANCHOR_LABEL__", anchor_label)
+        .replace("__ZONE_COUNT_ROWS__", zone_count_rows)
     )
     destination.write_text(html)

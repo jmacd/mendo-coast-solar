@@ -1009,17 +1009,18 @@ def analyze(
     parcels["reference_average_kw"] = (
         parcels["reference_annual_mwh"] * 1000 / (365 * 24)
     )
-    parcels["static_pv_export_limit_mw"] = (
-        parcels["pge_GenericPVCapacity_kW"].fillna(0) / 1000
+    parcels["static_generation_export_limit_mw"] = (
+        parcels["pge_GenCapacity_kW"].fillna(0) / 1000
     )
     parcels["reference_export_gap_mw"] = np.maximum(
-        parcels["reference_project_mw"] - parcels["static_pv_export_limit_mw"],
+        parcels["reference_project_mw"]
+        - parcels["static_generation_export_limit_mw"],
         0,
     )
     parcels["screened_project_mw"] = np.minimum.reduce(
         [
             parcels["estimated_mw"].to_numpy(dtype=float),
-            parcels["static_pv_export_limit_mw"].to_numpy(dtype=float),
+            parcels["static_generation_export_limit_mw"].to_numpy(dtype=float),
             parcels["pge_profile_min_midday_load_kw"]
             .fillna(0)
             .to_numpy(dtype=float)
@@ -1035,7 +1036,7 @@ def analyze(
     )
     parcels["interconnection_path"] = np.select(
         [
-            parcels["pge_GenericPVCapacity_kW"].fillna(0)
+            parcels["pge_GenCapacity_kW"].fillna(0)
             >= parcels["reference_project_mw"] * 1000,
             near_transmission,
         ],
@@ -1060,7 +1061,7 @@ def analyze(
         1,
     )
     generation_capacity = (
-        parcels["pge_GenericPVCapacity_kW"].fillna(0).to_numpy(dtype=float)
+        parcels["pge_GenCapacity_kW"].fillna(0).to_numpy(dtype=float)
     )
     hosting_score = np.clip(generation_capacity / 2000, 0, 1)
     metrics = {
@@ -1070,30 +1071,13 @@ def analyze(
         "flat_fraction": parcels["flat_fraction"].to_numpy(dtype=float),
         "open_land_cover": parcels["open_fraction"].to_numpy(dtype=float),
         "undeveloped": undeveloped,
-        "industrial_reuse": np.where(
-            parcels["site_type"].str.startswith("industrial"),
-            1.0,
-            0.0,
-        ),
         "distribution_proximity": np.exp(
             -parcels["pge_distance_m"].to_numpy(dtype=float)
             / settings["grid_distance_scale_m"]
         ),
-        "residential_demand": np.nan_to_num(
-            _normalize(parcels["pge_ResCust"].to_numpy(dtype=float))
-        ),
-        "evening_peak_demand": np.nan_to_num(
-            _normalize(
-                parcels["pge_profile_peak_load_kw"].to_numpy(dtype=float)
-            )
-        ),
         "grid_hosting_capacity": hosting_score,
         "solar_resource": _normalize(
             parcels["solar_kwh_m2_day"].to_numpy(dtype=float)
-        ),
-        "transmission_proximity": np.exp(
-            -parcels["transmission_distance_m"].to_numpy(dtype=float)
-            / settings["grid_distance_scale_m"]
         ),
         "low_highway_visibility": 1.0
         - _normalize(
@@ -1192,7 +1176,7 @@ def analyze(
         "reference_battery_mwh",
         "reference_annual_mwh",
         "reference_average_kw",
-        "static_pv_export_limit_mw",
+        "static_generation_export_limit_mw",
         "reference_export_gap_mw",
         "interconnection_path",
         "screened_project_mw",
@@ -1241,13 +1225,9 @@ def analyze(
         "score_flat_fraction",
         "score_open_land_cover",
         "score_undeveloped",
-        "score_industrial_reuse",
         "score_distribution_proximity",
-        "score_residential_demand",
-        "score_evening_peak_demand",
         "score_grid_hosting_capacity",
         "score_solar_resource",
-        "score_transmission_proximity",
         "score_low_highway_visibility",
         "geometry",
     ]
