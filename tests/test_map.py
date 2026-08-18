@@ -51,6 +51,35 @@ def test_candidate_map_embeds_sites_and_zoning(tmp_path):
     assert "feeder substations shown" not in content
     assert 'document.querySelector("#infrastructure-status").hidden = true' in content
     assert "selectItem(item" in content
+    assert "item.popupLayer = polygon;" in content
+    assert "selectItem(item, true, true, true);" in content
+    assert "L.canvas({ padding: 0.5, tolerance: 8 })" in content
+    assert "renderer: candidateRenderer" in content
+    assert "autoPanPadding: L.point(40, 40)" in content
+    assert 'className: "candidate-popup"' in content
+    assert "offset: L.point(280, 0)" in content
+    assert ".candidate-popup .leaflet-popup-tip-container" in content
+    assert "left: 12px;" in content
+    assert 'L.svg({ pane: "infrastructure-stations" })' in content
+    assert '"infrastructure-stations",\n      substationRenderer' in content
+    assert 'row.className = "candidate-row"' in content
+    assert 'detailRow.className = "candidate-detail"' in content
+    assert 'detailRow.innerHTML = `<td colspan="14">${popup(properties)}</td>`' in content
+    assert 'row.addEventListener("click", () => toggleRow(item))' in content
+    assert "if (selected === item)" in content
+    assert "clearSelection();" in content
+    assert 'item.row.setAttribute("aria-expanded", "true")' in content
+    assert 'item.detailRow.hidden = false' in content
+    assert 'rows.appendChild(item.detailRow)' in content
+    assert 'item.detailRow.hidden = !visible || item !== selected' in content
+    assert "if (item.popupLayer) item.popupLayer.closePopup();" in content
+    assert "const fitZoom = map.getBoundsZoom(bounds, false, [50, 50]);" in content
+    assert "Math.min(17, fitZoom - 3)" in content
+    assert "map.setView(bounds.getCenter(), contextZoom" in content
+    assert "map.setView(bounds.getCenter(), contextZoom, { animate: false });" in content
+    assert "if (showPopup && item.popupLayer) item.popupLayer.openPopup();" in content
+    assert "if (selected.popupLayer) selected.popupLayer.closePopup();" in content
+    assert "if (items.length) selectItem(items[0]" not in content
     assert 'data-sort="score"' in content
     assert 'data-sort="scope_anchor_fraction"' in content
     assert 'data-sort="pge_GenCapacity_kW"' in content
@@ -66,13 +95,14 @@ def test_candidate_map_embeds_sites_and_zoning(tmp_path):
     assert '["transmission-lines.geojson", "Transmission network"]' in content
     assert '"distribution-substations.geojson"' in content
     assert '"county-boundary.geojson"' in content
+    assert '{ collapsed: false, position: "bottomright" }' in content
     assert 'layerControl.addOverlay(distributionLayer, "12 kV distribution")' in content
     assert '`Transmission (${voltages.join("/")} kV)`' in content
     assert 'layerControl.addOverlay(substationLayer, "Distribution substations")' in content
     assert 'layerControl.addOverlay(countyLayer, "Mendocino County boundary")' not in content
     assert "const countyLayer = L.geoJSON(county" in content
     assert 'href="map-theme.css"' in content
-    assert 'src="map-infrastructure.js"' in content
+    assert 'src="map-infrastructure.js?v=2"' in content
     assert "MapInfrastructure.transmissionStyle" in content
     assert "Coastal Zone" in content
     assert '<option value="RR">Rural Residential: RR</option>' in content
@@ -95,6 +125,18 @@ def test_candidate_map_embeds_sites_and_zoning(tmp_path):
     assert "function updateZoneCounts(filter)" in content
     assert "row.hidden = !visible" in content
     assert "updateZoneCounts(zoneFilter);" in content
+    assert (
+        'document.querySelector("#zone-filter").addEventListener('
+        '"change", () => applyFilters(false));'
+    ) in content
+    assert (
+        'document.querySelector("#hide-west").addEventListener('
+        '"change", () => applyFilters(false));'
+    ) in content
+    assert (
+        'document.querySelector("#hide-zero-ica").addEventListener('
+        '"change", () => applyFilters(false));'
+    ) in content
     assert '["west", "crosses"].includes' in content
     assert '"highway_1_viewshed_exposure":0.042' in content
     assert "Nearest visible view" in content

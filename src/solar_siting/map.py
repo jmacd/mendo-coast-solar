@@ -223,15 +223,32 @@ def write_candidate_map(sites: gpd.GeoDataFrame, destination: Path) -> None:
       padding: 6px 7px;
       vertical-align: top;
     }
-    .candidates tbody tr {
+    .candidates tbody tr.candidate-row {
       border-left: 5px solid var(--zone-color);
       cursor: pointer;
     }
-    .candidates tbody tr:hover { background: #f0f6fa; }
-    .candidates tbody tr.selected {
+    .candidates tbody tr.candidate-row:hover { background: #f0f6fa; }
+    .candidates tbody tr.candidate-row.selected {
       background: #cfe8f6;
       box-shadow: 5px 0 0 #111 inset;
     }
+    .candidate-detail td {
+      background: #edf7fc;
+      border-left: 5px solid var(--zone-color);
+      padding: 12px 16px 16px;
+    }
+    .parcel-details { max-width: 620px; }
+    .parcel-details > strong { font-size: 14px; }
+    .parcel-details > div { color: #555; margin: 2px 0 8px; }
+    .parcel-details table { border-collapse: collapse; width: 100%; }
+    .parcel-details th, .parcel-details td {
+      background: transparent;
+      border: 0;
+      padding: 3px 8px 3px 0;
+      text-align: left;
+      vertical-align: top;
+    }
+    .parcel-details th { white-space: nowrap; }
     .candidates .number { text-align: right; white-space: nowrap; }
     .candidates .rank { font-size: 14px; font-weight: 750; }
     .candidates .apn {
@@ -253,12 +270,9 @@ def write_candidate_map(sites: gpd.GeoDataFrame, destination: Path) -> None:
     .side-west { color: #a62620; font-weight: 700; }
     .side-crosses { color: #8a5700; font-weight: 700; }
     .leaflet-popup-content { min-width: 280px; }
-    .leaflet-popup-content table { border-collapse: collapse; width: 100%; }
-    .leaflet-popup-content th {
-      padding-right: 8px;
-      text-align: left;
-      vertical-align: top;
-      white-space: nowrap;
+    .candidate-popup .leaflet-popup-tip-container {
+      left: 12px;
+      margin-left: 0;
     }
     @media (max-width: 900px) {
       #app { grid-template-columns: 1fr; grid-template-rows: 48% 52%; }
@@ -335,7 +349,7 @@ def write_candidate_map(sites: gpd.GeoDataFrame, destination: Path) -> None:
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
   integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<script src="map-infrastructure.js"></script>
+<script src="map-infrastructure.js?v=2"></script>
 <script>
 const candidates = __DATA__;
 const colors = __COLORS__;
@@ -343,10 +357,12 @@ const labels = __LABELS__;
 const focusZones = new Set(["AG", "FL", "TP", "RL", "I"]);
 const residentialZones = new Set(["RR", "RMR"]);
 const map = L.map("map", { preferCanvas: true });
+const candidateRenderer = L.canvas({ padding: 0.5, tolerance: 8 });
 map.createPane("infrastructure-lines");
 map.getPane("infrastructure-lines").style.zIndex = 350;
 map.createPane("infrastructure-stations");
 map.getPane("infrastructure-stations").style.zIndex = 650;
+const substationRenderer = L.svg({ pane: "infrastructure-stations" });
 const imagery = L.tileLayer(
   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
   { attribution: "Imagery &copy; Esri and contributors", maxZoom: 19 }
@@ -358,7 +374,7 @@ const streets = L.tileLayer(
 const layerControl = L.control.layers(
   { "Street map": streets, "Aerial imagery": imagery },
   null,
-  { collapsed: false }
+  { collapsed: false, position: "bottomright" }
 ).addTo(map);
 
 async function loadInfrastructure() {
@@ -412,7 +428,11 @@ async function loadInfrastructure() {
   }).addTo(map);
   const substationLayer = L.geoJSON(substations, {
     pane: "infrastructure-stations",
-    pointToLayer: (feature, latlng) => MapInfrastructure.substationMarker(latlng),
+    pointToLayer: (feature, latlng) => MapInfrastructure.substationMarker(
+      latlng,
+      "infrastructure-stations",
+      substationRenderer
+    ),
     onEachFeature: (feature, layer) => {
       const properties = feature.properties;
       layer.bindTooltip(esc(properties.SubstationName || "Distribution substation"), {
@@ -478,7 +498,8 @@ function baseStyle(feature) {
   };
 }
 function popup(properties) {
-  return `<strong>Rank ${esc(properties.rank)}: ${esc(properties.site_apns)}</strong>
+  return `<div class="parcel-details">
+    <strong>Rank ${esc(properties.rank)}: ${esc(properties.site_apns)}</strong>
     <div>${esc(address(properties))}</div>
     <table>
       <tr><th>Zone</th><td>${esc(zoneCode(properties.map_zone))} - ${esc(labels[properties.map_zone] || "")}</td></tr>
@@ -497,23 +518,40 @@ function popup(properties) {
       <tr><th>Scenic exposure</th><td>${number(Number(properties.highway_1_viewshed_exposure) * 100, 1)}%; visible from about ${number(properties.highway_1_visible_length_m, 0)} m of highway</td></tr>
       <tr><th>Nearest visible view</th><td>${number(properties.highway_1_nearest_visible_distance_m, 0)} m</td></tr>
       <tr><th>Connection</th><td>${esc(humanize(properties.interconnection_path))}</td></tr>
-    </table>`;
+    </table>
+  </div>`;
 }
 
 const items = [];
 for (const feature of candidates.features) {
+  const item = {
+    feature,
+    layer: null,
+    popupLayer: null,
+    row: null,
+    detailRow: null,
+    visible: false
+  };
   const layer = L.geoJSON(feature, {
+    renderer: candidateRenderer,
     style: baseStyle,
     onEachFeature: (item, polygon) => {
-      polygon.bindPopup(popup(item.properties));
+      polygon.bindPopup(popup(item.properties), {
+        autoPanPadding: L.point(40, 40),
+        className: "candidate-popup",
+        offset: L.point(280, 0)
+      });
       polygon.bindTooltip(
         `#${esc(item.properties.rank)} ${esc(item.properties.site_apns)} (${esc(item.properties.map_zone)})`,
         { sticky: true }
       );
     }
   });
-  const item = { feature, layer, row: null, visible: false };
-  layer.eachLayer(polygon => polygon.on("click", () => selectItem(item, false, true)));
+  item.layer = layer;
+  layer.eachLayer(polygon => polygon.on("click", () => {
+    item.popupLayer = polygon;
+    selectItem(item, true, true, true);
+  }));
   items.push(item);
 }
 items.sort((left, right) =>
@@ -525,7 +563,10 @@ for (const item of items) {
   const properties = item.feature.properties;
   const zone = properties.map_zone;
   const row = document.createElement("tr");
+  row.className = "candidate-row";
   row.style.setProperty("--zone-color", colors[zone] || colors.Unclassified);
+  row.setAttribute("aria-expanded", "false");
+  row.tabIndex = 0;
   row.innerHTML = `
     <td class="number rank">${esc(properties.rank)}</td>
     <td><span class="apn">${esc(properties.site_apns)}</span>
@@ -542,19 +583,50 @@ for (const item of items) {
     <td class="number">${number(properties.highway_1_distance_m, 0)}</td>
     <td class="number">${number(Number(properties.highway_1_viewshed_exposure) * 100, 1)}%</td>
     <td class="number">${number(properties.highway_1_visible_length_m, 0)}</td>`;
-  row.addEventListener("click", () => selectItem(item, true, false));
+  const detailRow = document.createElement("tr");
+  const detailId = `candidate-detail-${properties.rank}`;
+  detailRow.className = "candidate-detail";
+  detailRow.id = detailId;
+  detailRow.hidden = true;
+  detailRow.style.setProperty("--zone-color", colors[zone] || colors.Unclassified);
+  detailRow.innerHTML = `<td colspan="14">${popup(properties)}</td>`;
+  row.setAttribute("aria-controls", detailId);
+  row.addEventListener("click", () => toggleRow(item));
+  row.addEventListener("keydown", event => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    toggleRow(item);
+  });
   item.row = row;
+  item.detailRow = detailRow;
   rows.appendChild(row);
+  rows.appendChild(detailRow);
 }
 
 let selected = null;
-function selectItem(item, zoomMap, scrollList) {
-  if (selected) {
-    selected.row.classList.remove("selected");
-    selected.layer.setStyle(baseStyle(selected.feature));
+function clearSelection() {
+  if (!selected) return;
+  selected.row.classList.remove("selected");
+  selected.row.setAttribute("aria-expanded", "false");
+  selected.detailRow.hidden = true;
+  selected.layer.setStyle(baseStyle(selected.feature));
+  if (selected.popupLayer) selected.popupLayer.closePopup();
+  selected = null;
+}
+function toggleRow(item) {
+  if (selected === item) {
+    clearSelection();
+    return;
   }
+  selectItem(item, true, false);
+}
+function selectItem(item, zoomMap, scrollList, showPopup = false) {
+  clearSelection();
   selected = item;
   item.row.classList.add("selected");
+  item.row.setAttribute("aria-expanded", "true");
+  item.detailRow.hidden = false;
+  item.row.after(item.detailRow);
   item.layer.setStyle({
     ...baseStyle(item.feature),
     color: "#111",
@@ -562,9 +634,19 @@ function selectItem(item, zoomMap, scrollList) {
     weight: 5
   });
   item.layer.bringToFront();
-  if (zoomMap) map.fitBounds(item.layer.getBounds(), { maxZoom: 17, padding: [35, 35] });
-  if (scrollList) item.row.scrollIntoView({ behavior: "smooth", block: "center" });
-  item.layer.openPopup();
+  if (zoomMap) {
+    if (item.popupLayer) item.popupLayer.closePopup();
+    const bounds = item.layer.getBounds();
+    const fitZoom = map.getBoundsZoom(bounds, false, [50, 50]);
+    const contextZoom = Math.max(map.getMinZoom(), Math.min(17, fitZoom - 3));
+    map.setView(bounds.getCenter(), contextZoom, { animate: false });
+    if (showPopup && item.popupLayer) item.popupLayer.openPopup();
+  } else if (showPopup) {
+    if (item.popupLayer) item.popupLayer.openPopup();
+  }
+  if (scrollList) {
+    item.row.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+  }
 }
 
 let sortColumn = "rank";
@@ -583,7 +665,10 @@ function sortRows() {
       String(rightValue ?? "")
     );
   });
-  for (const item of items) rows.appendChild(item.row);
+  for (const item of items) {
+    rows.appendChild(item.row);
+    rows.appendChild(item.detailRow);
+  }
   for (const button of document.querySelectorAll("th button[data-sort]")) {
     const label = button.textContent.replace(/[ ▲▼]$/, "");
     button.textContent = button.dataset.sort === sortColumn
@@ -640,6 +725,7 @@ function applyFilters(fitMap = false) {
       && !(hideWest && westOrCrossing)
       && !(hideZeroIca && hasZeroIca);
     item.row.hidden = !visible;
+    item.detailRow.hidden = !visible || item !== selected;
     if (visible && !item.visible) item.layer.addTo(map);
     if (!visible && item.visible) map.removeLayer(item.layer);
     item.visible = visible;
@@ -651,12 +737,11 @@ function applyFilters(fitMap = false) {
     map.fitBounds(L.featureGroup(visibleLayers).getBounds(), { padding: [20, 20] });
   }
 }
-document.querySelector("#zone-filter").addEventListener("change", () => applyFilters(true));
-document.querySelector("#hide-west").addEventListener("change", () => applyFilters(true));
-document.querySelector("#hide-zero-ica").addEventListener("change", () => applyFilters(true));
+document.querySelector("#zone-filter").addEventListener("change", () => applyFilters(false));
+document.querySelector("#hide-west").addEventListener("change", () => applyFilters(false));
+document.querySelector("#hide-zero-ica").addEventListener("change", () => applyFilters(false));
 sortRows();
 applyFilters(true);
-if (items.length) selectItem(items[0], false, false);
 loadInfrastructure().catch(error => {
   const status = document.querySelector("#infrastructure-status");
   status.hidden = false;
