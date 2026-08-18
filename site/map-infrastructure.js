@@ -24,9 +24,10 @@
     };
   }
 
-  function substationMarker(latlng, pane = "infrastructure-stations") {
+  function substationMarker(latlng, pane = "infrastructure-stations", renderer) {
     return L.circleMarker(latlng, {
       pane,
+      renderer,
       color: "#17201c",
       fillColor: "#ffd447",
       fillOpacity: .95,
