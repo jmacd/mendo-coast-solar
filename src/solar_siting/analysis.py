@@ -1358,7 +1358,6 @@ def analyze(
             "- NASA POWER is too coarse to resolve local coastal fog and shading.",
             "- Wetlands are screened with a planning buffer; project-specific buffers vary.",
             "- CPAD and prime-farmland overlays are conservative screening exclusions.",
-            "- Land inside the Fort Bragg city limits is excluded from county screening.",
             "- Assessed improvement value is a proxy; aerial review must confirm open land.",
             "- Coastal Zone and parcel boundaries are representational, not survey boundaries.",
             "- Zoning fields are reported but not scored as a legal entitlement judgment.",
