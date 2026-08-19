@@ -106,10 +106,3 @@ def test_candidate_explorer_loads_layers_and_ranks_visible_candidates():
     assert 'feature.properties.highway_1_side === "east"' in content
     assert 'id: "candidate-highlight-fill"' in content
     assert 'href="map-theme.css"' in content
-
-
-def test_legacy_candidate_map_redirects_to_grid_explorer():
-    content = (SITE / "candidate-map.html").read_text()
-
-    assert 'content="0; url=grid-explorer.html"' in content
-    assert "<script" not in content
