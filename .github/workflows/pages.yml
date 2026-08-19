@@ -68,7 +68,6 @@ jobs:
           mkdir _site
           cp site/* _site/
           cp site/.nojekyll _site/
-          cp output/candidate-map.html _site/candidate-map.html
           cp output/*.csv output/*.geojson output/report.md _site/
           cp data/provenance.json _site/
       - uses: actions/configure-pages@v5

@@ -15,8 +15,6 @@ from rasterio.warp import Resampling, reproject
 from scipy import ndimage
 from shapely.geometry import LineString, box, mapping
 
-from .map import write_candidate_map
-
 ACRE_M2 = 4046.8564224
 
 
@@ -291,6 +289,37 @@ def highway_metrics(
             sides.append("east")
             east_scores.append(1.0)
     return distances, sides, np.array(east_scores, dtype=float)
+
+
+def first_public_road_sides(
+    sites: gpd.GeoDataFrame,
+    public_roads: gpd.GeoDataFrame,
+) -> list[str]:
+    road_geometry = valid_union(public_roads.geometry)
+    road_bounds = road_geometry.bounds
+    sides = []
+    for geometry in sites.geometry:
+        centroid = geometry.centroid
+        latitude_line = LineString(
+            [
+                (road_bounds[0] - 1, centroid.y),
+                (road_bounds[2] + 1, centroid.y),
+            ]
+        )
+        crossings = shapely.get_coordinates(
+            road_geometry.intersection(latitude_line)
+        )
+        if len(crossings):
+            first_road_x = crossings[:, 0].min()
+        else:
+            nearest_line = shapely.shortest_line(centroid, road_geometry)
+            first_road_x = shapely.get_coordinates(nearest_line)[-1][0]
+        first_road_point = shapely.Point(first_road_x, centroid.y)
+        if geometry.distance(first_road_point) <= 0.01:
+            sides.append("crosses")
+        else:
+            sides.append("west" if centroid.x < first_road_x else "east")
+    return sides
 
 
 def terrain_line_visible(
@@ -666,8 +695,10 @@ def analyze(
 ) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     for legacy_name in [
+        "candidate-map.html",
         "distribution-ready-parcels.csv",
         "distribution-ready-parcels.geojson",
+        "grid-candidates.geojson",
     ]:
         (output_dir / legacy_name).unlink(missing_ok=True)
     crs = config["area"]["analysis_crs"]
@@ -700,6 +731,9 @@ def analyze(
     ).to_crs(crs)
     transmission = gpd.read_file(data_dir / sources["transmission"]["filename"]).to_crs(crs)
     highway_1 = gpd.read_file(data_dir / sources["highway_1"]["filename"]).to_crs(crs)
+    public_roads = gpd.read_file(
+        data_dir / sources["public_roads"]["filename"]
+    ).to_crs(crs)
     pge_ica = gpd.read_file(data_dir / sources["pge_ica"]["filename"]).to_crs(crs)
     pge_feeders = gpd.read_file(
         data_dir / sources["pge_feeders"]["filename"]
@@ -917,6 +951,9 @@ def analyze(
         parcels["highway_1_side"],
         _,
     ) = highway_metrics(parcels, highway_1)
+    parcels["first_public_road_side"] = first_public_road_sides(
+        parcels, public_roads
+    )
 
     pge_columns = [
         "FeederId",
@@ -1189,6 +1226,7 @@ def analyze(
         "transmission_Type",
         "highway_1_side",
         "highway_1_distance_m",
+        "first_public_road_side",
         "highway_1_viewshed_exposure",
         "highway_1_visible_length_m",
         "highway_1_nearest_visible_distance_m",
@@ -1269,26 +1307,7 @@ def analyze(
     (output_dir / "ranked-parcels.geojson").write_text(
         public.to_crs("EPSG:4326").to_json(drop_id=True)
     )
-    grid_candidate_columns = [
-        "rank",
-        "site_apns",
-        "SITUS_ADD",
-        "SITUS_CTY",
-        "BASEZONE",
-        "planning_jurisdiction",
-        "score",
-        "contiguous_acres",
-        "highway_1_side",
-        "pge_GenCapacity_kW",
-        "pge_GenericPVCapacity_kW",
-        "pge_distance_m",
-        "geometry",
-    ]
-    (output_dir / "grid-candidates.geojson").write_text(
-        public[grid_candidate_columns].to_crs("EPSG:4326").to_json(drop_id=True)
-    )
     public.drop(columns="geometry").to_csv(output_dir / "ranked-parcels.csv", index=False)
-    write_candidate_map(public, output_dir / "candidate-map.html")
     (output_dir / "screened-parcels.geojson").write_text(
         screened.to_crs("EPSG:4326").to_json(drop_id=True)
     )

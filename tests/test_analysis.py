@@ -12,6 +12,7 @@ from solar_siting.analysis import (
     ACRE_M2,
     _normalize,
     candidate_sites,
+    first_public_road_sides,
     grid_accessible_parcels,
     highway_metrics,
     highway_viewshed_metrics,
@@ -237,6 +238,29 @@ def test_highway_metrics_compare_side_at_site_latitude():
 
     assert sides == ["west"]
     np.testing.assert_allclose(scores, [0])
+
+
+def test_first_public_road_sides_use_westernmost_road():
+    sites = gpd.GeoDataFrame(
+        geometry=[
+            box(-20, 0, -10, 10),
+            box(10, 0, 20, 10),
+            box(-5, 0, 5, 10),
+            box(35, 0, 45, 10),
+        ],
+        crs="EPSG:3310",
+    )
+    roads = gpd.GeoDataFrame(
+        geometry=[
+            LineString([(0, -10), (0, 20)]),
+            LineString([(40, -10), (40, 20)]),
+        ],
+        crs=sites.crs,
+    )
+
+    sides = first_public_road_sides(sites, roads)
+
+    assert sides == ["west", "east", "crosses", "east"]
 
 
 def test_terrain_line_visible_detects_blocking_ridge():
