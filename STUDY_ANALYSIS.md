@@ -366,11 +366,11 @@ The primary ranking contains 208 sites. Open Space zoning is excluded. `RL` is
 Rangeland and is not counted as residential. Only `RR` (Rural Residential) and
 `RMR` (Remote Residential) are classified as residential in this summary.
 
-`output/candidate-map.html` visualizes these sites over aerial imagery. It
-provides a linked sortable table and map: selecting a row locates its parcel,
-while selecting a parcel highlights and scrolls to its row. It supports zoning
-filters and searches by APN, County situs address, town, or feeder, and shows
-land, wetland, demand, storage, Highway 1, and interconnection attributes.
+`site/grid-explorer.html` visualizes these sites over street or aerial imagery.
+It ranks compact candidate cards within the current map viewport and can fit all
+filtered candidates on request. Cards can be sorted by score, Generation ICA,
+suitable acres, or 12 kV distance, and expand to show land, grid, zoning, road,
+and visibility attributes.
 
 | Base zone | Meaning | Sites | Share |
 |---|---|---:|---:|

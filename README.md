@@ -101,8 +101,7 @@ This preserves the original assumptions for comparison.
 |---|---|
 | `output/ranked-parcels.csv` | Primary solar-storage ranking |
 | `output/ranked-parcels.geojson` | Ranked site geometry for QGIS or web maps |
-| `output/candidate-map.html` | Interactive aerial map colored by base zoning |
-| `output/grid-candidates.geojson` | Lightweight candidate layer for the local grid explorer |
+| `site/grid-explorer.html` | Interactive candidate and grid explorer |
 | `output/ica-sections.geojson` | Published PG&E ICA sections for the grid explorer |
 | `output/distribution-grid.geojson` | Coast-serving feeder geometry for the grid explorer |
 | `output/distribution-substations.geojson` | Published PG&E distribution-substation points |
@@ -116,24 +115,27 @@ This preserves the original assumptions for comparison.
 GeoJSON coordinates are WGS84 longitude and latitude. Acreage and distance
 calculations use California Albers, EPSG:3310.
 
-Serve the output directory locally so basemap providers receive a normal web
-referrer:
+Assemble the static site and generated outputs in one directory, then serve it
+locally so the explorer can fetch its GeoJSON layers:
 
 ```sh
-python3 -m http.server 8765 --bind 127.0.0.1 --directory output
+mkdir -p _site
+cp -R site/. _site/
+cp output/*.csv output/*.geojson output/report.md _site/
+python3 -m http.server 8765 --bind 127.0.0.1 --directory _site
 ```
 
-Then open <http://127.0.0.1:8765/candidate-map.html>. The side-by-side explorer
-links a sortable ranking table and map polygons in both directions and supports
-searches by APN, County situs address, town, zone, or feeder. The map needs
-internet access for Leaflet and aerial or street-map tiles; candidate geometry
-and attributes are embedded in the HTML.
+Then open <http://127.0.0.1:8765/grid-explorer.html>. The explorer ranks ten
+compact candidate cards within the current viewport and can fit all filtered
+candidates on request. Candidates can be sorted by score, Generation ICA,
+suitable acres, or 12 kV distance. The map needs internet access for MapLibre
+and aerial or street-map tiles; candidate geometry and attributes load from
+`ranked-parcels.geojson`.
 
-The landing page uses `site/grid-explorer.html` for the detailed
+The landing page embeds `site/grid-explorer.html` for the detailed
 Fort Bragg–Mendocino 12 kV view. It renders a crisp vector basemap, follows pan
 and zoom anywhere along the coast, and re-ranks the best candidates in the
-visible region. The county-wide ranking remains available in
-`candidate-map.html`.
+visible region. The same page is the full candidate explorer.
 
 `site/county-grid.html` uses the same published infrastructure layers and map
 theme for the landing-page county overview, replacing the former static
@@ -150,8 +152,8 @@ Useful output fields include:
   ICA section), line section, voltage, phase count, and published ICA
 - feeder customer, distributed-generation, and load-profile summaries
 - `transmission_distance_m`
-- `highway_1_side`, distance, terrain-viewshed exposure, visible highway
-  length, and nearest visible view
+- `highway_1_side`, `first_public_road_side`, highway distance,
+  terrain-viewshed exposure, visible highway length, and nearest visible view
 - `eligible`, `eligibility_reasons`, component scores, and final `score`
 
 County data can contain several geometry components with the same APN. `FID`
@@ -219,6 +221,7 @@ The manifest currently retrieves:
 - CAL FIRE hazard zones
 - California Energy Commission transmission lines
 - Caltrans State Highway Network Route 1 geometry
+- Mendocino County public road centerlines
 - PG&E distribution ICA line sections
 - PG&E distribution substations and published transmission lines
 - PG&E feeder summaries and monthly-hour load profiles

@@ -33,19 +33,23 @@
       border-right: 1px solid var(--line);
       display: flex;
       flex-direction: column;
+      min-height: 0;
       min-width: 0;
+      overflow: hidden;
       position: relative;
       z-index: 3;
     }
-    .sidebar-head { border-bottom: 1px solid var(--line); padding: 14px 16px 12px; }
-    h1 { font: 700 18px/1.15 Georgia, serif; margin: 0 0 4px; }
+    h1 {
+      border-bottom: 1px solid var(--line);
+      font: 700 17px/1.15 Georgia, serif;
+      margin: 0;
+      padding: 11px 16px 9px;
+    }
     .summary { color: var(--muted); font-size: 11px; margin: 0; }
     .legends {
-      border-bottom: 1px solid var(--line);
       display: grid;
-      gap: 8px;
+      gap: 6px 10px;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      padding: 10px 16px;
     }
     .legend h2 {
       font-size: 10px;
@@ -57,7 +61,7 @@
       align-items: center;
       color: var(--muted);
       display: flex;
-      font-size: 9px;
+      font-size: 11px;
       gap: 5px;
       margin: 3px 0;
       white-space: nowrap;
@@ -71,25 +75,113 @@
       gap: 5px 14px;
       padding: 8px 16px;
     }
+    .filter-selects {
+      display: grid;
+      gap: 6px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      width: 100%;
+    }
+    .filter-selects label {
+      align-items: stretch;
+      display: flex;
+      flex-direction: column;
+    }
+    .filters select {
+      background: var(--cream);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      color: var(--ink);
+      font: inherit;
+      min-width: 0;
+      padding: 5px 6px;
+      width: 100%;
+    }
     .filters label {
       align-items: center;
       color: var(--muted);
       display: flex;
-      font-size: 9px;
+      font-size: 11px;
       gap: 5px;
     }
+    .filters .filter-selects label { align-items: stretch; }
     .filters input { accent-color: var(--ink); margin: 0; }
+    .zone-summary {
+      border-bottom: 1px solid var(--line);
+      padding: 6px 16px;
+    }
+    .zone-summary summary {
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 750;
+    }
+    .zone-counts {
+      border-collapse: collapse;
+      font-size: 10px;
+      margin-top: 5px;
+      width: 100%;
+    }
+    .zone-counts th, .zone-counts td {
+      border-bottom: 1px solid #ddd;
+      padding: 3px 4px;
+    }
+    .zone-counts th { text-align: left; }
+    .zone-counts td { text-align: right; }
+    .zone-counts thead th:not(:first-child) { text-align: right; }
+    .zone-counts .total { background: #edf3ed; font-weight: 750; }
+    .zone-count-note { color: var(--muted); font-size: 9px; margin: 4px 0 0; }
     .candidate-heading {
       align-items: baseline;
       display: flex;
+      gap: 8px;
       justify-content: space-between;
       padding: 10px 16px 5px;
     }
-    .candidate-heading h2 { font-size: 12px; margin: 0; }
-    #visible-count { color: var(--muted); font-size: 9px; }
+    .candidate-heading h2 { font-size: 14px; margin: 0; }
+    #show-all {
+      background: var(--cream);
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      color: var(--ink);
+      cursor: pointer;
+      font: 750 10px/1.2 Inter, ui-sans-serif, system-ui, sans-serif;
+      padding: 4px 7px;
+    }
+    #visible-count { color: var(--muted); font-size: 10px; }
+    .candidate-pager {
+      align-items: center;
+      display: flex;
+      gap: 4px;
+    }
+    .candidate-pager button {
+      background: var(--cream);
+      border: 1px solid var(--line);
+      border-radius: 3px;
+      color: var(--ink);
+      cursor: pointer;
+      font: 750 12px/1 system-ui, sans-serif;
+      height: 22px;
+      width: 24px;
+    }
+    .candidate-pager button:disabled { cursor: default; opacity: .35; }
+    #page-range { color: var(--muted); font-size: 10px; min-width: 58px; text-align: center; }
+    .candidate-columns {
+      color: var(--muted);
+      display: grid;
+      font-size: 9px;
+      font-weight: 750;
+      gap: 7px;
+      grid-template-columns: 32px 48px minmax(0, 1fr);
+      letter-spacing: .04em;
+      padding: 3px 16px 5px;
+      text-transform: uppercase;
+    }
+    .candidate-columns span:first-child { text-align: right; }
+    .candidate-columns span:nth-child(2) { text-align: center; }
     #candidate-list {
+      flex: 1 1 auto;
       list-style: none;
       margin: 0;
+      min-height: 0;
       overflow: auto;
       padding: 0 16px 12px;
     }
@@ -102,7 +194,7 @@
       display: grid;
       font: inherit;
       gap: 0 7px;
-      grid-template-columns: 24px minmax(0, 1fr);
+      grid-template-columns: 32px 48px minmax(0, 1fr);
       padding: 7px 0;
       text-align: left;
       width: 100%;
@@ -111,24 +203,30 @@
       background: #edf3ed;
       outline: none;
     }
+    .candidate:disabled {
+      cursor: default;
+      opacity: .38;
+    }
     .rank {
-      align-items: center;
-      border: 2px solid var(--zone);
-      border-radius: 50%;
-      display: flex;
-      font-size: 9px;
+      font-size: 11px;
       font-weight: 800;
       grid-row: 1 / span 2;
-      height: 22px;
-      justify-content: center;
-      width: 22px;
+      padding-top: 1px;
+      text-align: right;
     }
-    .address { font-size: 10px; font-weight: 750; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .details { color: var(--muted); font-size: 9px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .zone-code {
+      font-size: 11px;
+      font-weight: 800;
+      grid-row: 1 / span 2;
+      padding-top: 1px;
+      text-align: center;
+    }
+    .address { font-size: 12px; font-weight: 750; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .details { color: var(--muted); font-size: 10px; line-height: 1.4; }
     .candidate-detail {
       background: #f2f5ef;
       display: grid;
-      font-size: 9px;
+      font-size: 10px;
       gap: 3px 8px;
       grid-template-columns: auto minmax(0, 1fr);
       margin: 0 0 8px 31px;
@@ -137,6 +235,50 @@
     .candidate-detail span { color: var(--muted); }
     .candidate-detail b { font-weight: 650; overflow-wrap: anywhere; }
     #map { min-width: 0; }
+    .map-options {
+      background: var(--cream);
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      bottom: 28px;
+      box-shadow: 0 2px 10px rgba(23, 49, 40, .16);
+      display: grid;
+      font-size: 10px;
+      gap: 6px;
+      padding: 8px;
+      position: absolute;
+      right: 10px;
+      width: 150px;
+      z-index: 5;
+    }
+    .map-options label {
+      align-items: center;
+      display: flex;
+      gap: 5px;
+    }
+    .map-options select {
+      background: var(--cream);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      color: var(--ink);
+      font: inherit;
+      padding: 5px;
+      width: 100%;
+    }
+    .map-legend-control {
+      background: var(--cream);
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      bottom: 174px;
+      box-shadow: 0 2px 10px rgba(23, 49, 40, .16);
+      padding: 8px;
+      position: absolute;
+      right: 10px;
+      width: 150px;
+      z-index: 5;
+    }
+    .map-legend-control .legends { grid-template-columns: 1fr; }
+    .map-legend-control .key { font-size: 8px; margin: 2px 0; }
+    .map-legend-control .legend h2 { font-size: 9px; }
     #leaders { inset: 0; pointer-events: none; position: absolute; z-index: 4; }
     #leaders path { fill: none; stroke: #17201c; stroke-width: 1; vector-effect: non-scaling-stroke; }
     #leaders circle { fill: var(--cream); stroke: #17201c; stroke-width: 1.5; }
@@ -155,7 +297,7 @@
     @media (max-width: 620px) {
       #app { grid-template-columns: minmax(190px, 43%) minmax(0, 1fr); }
       #status { left: calc(43% + 8px); }
-      .legends { grid-template-columns: 1fr; }
+      .filter-selects { gap: 5px; }
     }
   </style>
   <link rel="stylesheet" href="map-theme.css">
@@ -163,32 +305,108 @@
 <body>
   <main id="app">
     <aside id="sidebar" class="map-sidebar">
-      <div class="legends">
-        <section class="legend">
-          <h2>Generation ICA</h2>
-          <div class="key"><i class="swatch" style="background:#e76f00"></i>&lt;200 kW</div>
-          <div class="key"><i class="swatch" style="background:#e6ab02"></i>200-299 kW</div>
-          <div class="key"><i class="swatch" style="background:#15583b"></i>&ge;300 kW</div>
-          <div class="key"><i class="swatch" style="background:#7b817e"></i>Not published</div>
-        </section>
-        <section class="legend legend-zoning">
-          <h2>Candidate zoning</h2>
-          <div id="zone-legend" aria-live="polite"></div>
-        </section>
-      </div>
+      <h1>Mendocino Coast Solar Sites</h1>
       <div class="filters" aria-label="Candidate filters">
-        <label><input id="hide-west" type="checkbox" checked>
-          Show only east of Highway 1</label>
-        <label><input id="hide-zero-ica" type="checkbox" checked>
-          Show only non-zero ICA</label>
+        <div class="filter-selects">
+          <label>Generation ICA
+            <select id="ica-filter">
+              <option value="nonzero">Non-zero only</option>
+              <option value="all">All published and unpublished</option>
+            </select>
+          </label>
+          <label>East-of constraint
+            <select id="road-filter">
+              <option value="highway-1">Highway 1</option>
+              <option value="public-road">First public road</option>
+              <option value="all">No east-of constraint</option>
+            </select>
+          </label>
+          <label>Zoning
+            <select id="zone-filter">
+              <option value="all">All zones</option>
+              <option value="focus">AG / FL / TP / RL / I</option>
+              <option value="RR">Rural residential (RR)</option>
+              <option value="RMR">Remote residential (RMR)</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
+          <label>Rank candidates by
+            <select id="candidate-sort">
+              <option value="score">Score / county rank</option>
+              <option value="ica">Generation ICA</option>
+              <option value="acres">Suitable acres</option>
+              <option value="distance">12 kV distance</option>
+            </select>
+          </label>
+        </div>
       </div>
+      <details class="zone-summary">
+        <summary>Candidate counts by zone</summary>
+        <table class="zone-counts">
+          <thead><tr>
+            <th>Zone</th>
+            <th>All</th>
+            <th>East of first road</th>
+            <th>East of Hwy 1</th>
+          </tr></thead>
+          <tbody id="zone-count-body"></tbody>
+        </table>
+        <p class="zone-count-note">Each cell: all / non-zero Generation ICA</p>
+      </details>
       <div class="candidate-heading">
         <h2>Best showing</h2>
+        <button id="show-all" type="button">Show all</button>
         <span id="visible-count"></span>
+        <div class="candidate-pager" aria-label="Candidate pages">
+          <button id="previous-page" type="button" aria-label="Previous candidates">←</button>
+          <span id="page-range"></span>
+          <button id="next-page" type="button" aria-label="Next candidates">→</button>
+        </div>
+      </div>
+      <div class="candidate-columns" aria-hidden="true">
+        <span>Rank</span><span>Zoning</span><span>Details</span>
       </div>
       <ol id="candidate-list"></ol>
     </aside>
     <div id="map" aria-label="Interactive distribution grid and solar candidate map"></div>
+    <div class="map-options" aria-label="Map display options">
+      <label>Basemap
+        <select id="basemap">
+          <option value="streets">Street map</option>
+          <option value="aerial">Aerial imagery</option>
+        </select>
+      </label>
+      <label><input id="show-distribution" type="checkbox" checked>
+        Distribution</label>
+      <label><input id="show-transmission" type="checkbox" checked>
+        Transmission</label>
+      <label><input id="show-substations" type="checkbox" checked>
+        Substations</label>
+    </div>
+    <div class="map-legend-control">
+      <div class="legends">
+        <section class="legend">
+          <h2>Generation ICA</h2>
+          <div class="key"><i class="swatch" style="background:#e76f00"></i>&lt;200 kW</div>
+          <div class="key"><i class="swatch" style="background:#e6ab02"></i>200–299 kW</div>
+          <div class="key"><i class="swatch" style="background:#15583b"></i>&ge;300 kW</div>
+          <div class="key"><i class="swatch" style="background:#7b817e"></i>Not published</div>
+        </section>
+        <section class="legend">
+          <h2>Candidate zoning</h2>
+          <div class="key"><i class="swatch zone" style="background:#e6ab02"></i>AG</div>
+          <div class="key"><i class="swatch zone" style="background:#1b9e77"></i>FL</div>
+          <div class="key"><i class="swatch zone" style="background:#006d2c"></i>TP</div>
+          <div class="key"><i class="swatch zone" style="background:#8c6d31"></i>RL</div>
+          <div class="key"><i class="swatch zone" style="background:#1f78b4"></i>I</div>
+          <div class="key"><i class="swatch zone" style="background:#e31a1c"></i>RR</div>
+          <div class="key"><i class="swatch zone" style="background:#6a3d9a"></i>RMR</div>
+          <div class="key"><i class="swatch zone" style="background:#7570b3"></i>PF</div>
+          <div class="key"><i class="swatch zone" style="background:#66c2a5"></i>OS</div>
+          <div class="key"><i class="swatch zone" style="background:#969696"></i>U</div>
+        </section>
+      </div>
+    </div>
     <svg id="leaders" aria-hidden="true"></svg>
     <div id="status">Loading grid and candidates...</div>
   </main>
@@ -196,7 +414,7 @@
     integrity="sha384-/L1njH4bbgNt9Uk3HwJ272N9fxJzRBQCxhtwGkZiqgl+Nxpq2ETUNZhNMNV1RgyW"
     crossorigin="anonymous"></script>
   <script>
-    const MAX_VISIBLE = 12;
+    const MAX_VISIBLE = 10;
     const zoneColors = {
       RL: "#8c6d31", AG: "#e6ab02", RMR: "#6a3d9a", RR: "#e31a1c",
       FL: "#1b9e77", TP: "#006d2c", OS: "#66c2a5", I: "#1f78b4",
@@ -213,24 +431,33 @@
     const leaders = document.querySelector("#leaders");
     const status = document.querySelector("#status");
     const visibleCount = document.querySelector("#visible-count");
-    const zoneLegend = document.querySelector("#zone-legend");
-    const hideWest = document.querySelector("#hide-west");
-    const hideZeroIca = document.querySelector("#hide-zero-ica");
+    const pageRange = document.querySelector("#page-range");
+    const previousPage = document.querySelector("#previous-page");
+    const nextPage = document.querySelector("#next-page");
+    const zoneCountBody = document.querySelector("#zone-count-body");
+    const icaFilter = document.querySelector("#ica-filter");
+    const roadFilter = document.querySelector("#road-filter");
+    const zoneFilter = document.querySelector("#zone-filter");
+    const candidateSort = document.querySelector("#candidate-sort");
     let candidates = [];
+    let filteredCandidates = [];
     let displayed = [];
     let visibleCandidates = [];
+    let visibleRanks = new Map();
+    let candidatePage = 0;
     let activeApn = null;
+    const focusZones = new Set(["AG", "FL", "TP", "RL", "I"]);
 
     const map = new maplibregl.Map({
       container: "map",
       style: "https://tiles.openfreemap.org/styles/liberty",
-      bounds: [[-123.855, 39.325], [-123.78, 39.415]],
-      fitBoundsOptions: { padding: 16 },
+      center: [-123.75, 39.23],
+      zoom: 8,
       maxPitch: 0,
       attributionControl: true
     });
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
-    map.addControl(new maplibregl.ScaleControl({ unit: "imperial" }), "bottom-right");
+    map.addControl(new maplibregl.ScaleControl({ unit: "imperial" }), "bottom-left");
 
     function esc(value) {
       return String(value ?? "").replace(/[&<>"']/g, character => ({
@@ -319,54 +546,143 @@
     function candidateId(feature) {
       return String(feature.properties.site_apns);
     }
-    function renderZoneLegend() {
-      const counts = new Map();
-      for (const feature of visibleCandidates) {
-        const zone = clean(feature.properties.BASEZONE) || "Unclassified";
-        counts.set(zone, (counts.get(zone) || 0) + 1);
-      }
-      const preferredOrder = [
-        "AG", "FL", "TP", "RL", "I", "RR", "RMR", "PF", "OS", "Unclassified"
-      ];
-      const order = new Map(preferredOrder.map((zone, index) => [zone, index]));
-      const zones = [...counts].sort(([left], [right]) =>
-        (order.get(left) ?? preferredOrder.length) -
-          (order.get(right) ?? preferredOrder.length)
-        || left.localeCompare(right)
+    function candidateZone(properties) {
+      return clean(properties.BASEZONE) || "Unclassified";
+    }
+    function zoneCode(zone) {
+      return zone === "Unclassified" ? "U" : zone.slice(0, 2);
+    }
+    function northToSouth(left, right) {
+      const leftLatitude = (left._bounds[1] + left._bounds[3]) / 2;
+      const rightLatitude = (right._bounds[1] + right._bounds[3]) / 2;
+      return rightLatitude - leftLatitude;
+    }
+    function rankWindowThenNorth(left, right) {
+      const leftWindow = Math.floor(
+        (visibleRanks.get(candidateId(left)) - 1) / MAX_VISIBLE
       );
-      zoneLegend.replaceChildren();
-      if (!zones.length) {
-        zoneLegend.textContent = "No candidates in view";
-        return;
+      const rightWindow = Math.floor(
+        (visibleRanks.get(candidateId(right)) - 1) / MAX_VISIBLE
+      );
+      return leftWindow - rightWindow || northToSouth(left, right);
+    }
+    function zoneMatches(zone) {
+      if (zoneFilter.value === "all") return true;
+      if (zoneFilter.value === "focus") return focusZones.has(zone);
+      if (zoneFilter.value === "other") {
+        return !focusZones.has(zone) && !["RR", "RMR"].includes(zone);
       }
-      for (const [zone, count] of zones) {
-        const key = document.createElement("div");
-        key.className = "key";
-        const swatch = document.createElement("i");
-        swatch.className = "swatch zone";
-        swatch.style.background = zoneColors[zone] || zoneColors.Unclassified;
-        key.append(swatch, `${zoneLabels[zone] || zone} (${count})`);
-        zoneLegend.append(key);
+      return zone === zoneFilter.value;
+    }
+    function hasNonZeroIca(properties) {
+      const value = Number(properties.pge_GenCapacity_kW);
+      return !(properties.pge_GenCapacity_kW !== null
+        && Number.isFinite(value)
+        && value === 0);
+    }
+    function countPair(features) {
+      return `${features.length} / ${
+        features.filter(feature => hasNonZeroIca(feature.properties)).length
+      }`;
+    }
+    function renderZoneCounts() {
+      const zones = [...new Set(candidates.map(
+        feature => candidateZone(feature.properties)
+      ))]
+        .filter(zoneMatches)
+        .sort((left, right) => {
+          const preferred = ["AG", "FL", "TP", "RL", "I", "RR", "RMR"];
+          return (preferred.indexOf(left) < 0 ? preferred.length : preferred.indexOf(left))
+            - (preferred.indexOf(right) < 0 ? preferred.length : preferred.indexOf(right))
+            || left.localeCompare(right);
+        });
+      zoneCountBody.replaceChildren();
+      const selected = candidates.filter(
+        feature => zoneMatches(candidateZone(feature.properties))
+      );
+      for (const zone of zones) {
+        const features = selected.filter(
+          feature => candidateZone(feature.properties) === zone
+        );
+        appendZoneCountRow(zoneCode(zone), features);
       }
+      appendZoneCountRow("Total", selected, true);
+    }
+    function appendZoneCountRow(label, features, total = false) {
+      const eastFirstRoad = features.filter(
+        feature => feature.properties.first_public_road_side === "east"
+      );
+      const eastHighway = features.filter(
+        feature => feature.properties.highway_1_side === "east"
+      );
+      const row = document.createElement("tr");
+      row.classList.toggle("total", total);
+      row.innerHTML = `<th>${esc(label)}</th>
+        <td>${countPair(features)}</td>
+        <td>${countPair(eastFirstRoad)}</td>
+        <td>${countPair(eastHighway)}</td>`;
+      zoneCountBody.append(row);
+    }
+    function numericSortValue(feature) {
+      const properties = feature.properties;
+      const field = {
+        score: "score",
+        ica: "pge_GenCapacity_kW",
+        acres: "contiguous_acres",
+        distance: "pge_distance_m"
+      }[candidateSort.value];
+      const value = Number(properties[field]);
+      return properties[field] !== null && properties[field] !== ""
+        && Number.isFinite(value) ? value : null;
+    }
+    function compareCandidates(left, right) {
+      const leftValue = numericSortValue(left);
+      const rightValue = numericSortValue(right);
+      if (leftValue === null) return rightValue === null ? 0 : 1;
+      if (rightValue === null) return -1;
+      const direction = candidateSort.value === "distance" ? 1 : -1;
+      return direction * (leftValue - rightValue)
+        || Number(left.properties.rank) - Number(right.properties.rank);
     }
     function passesCandidateFilters(feature) {
       const properties = feature.properties;
-      const highwaySide = clean(properties.highway_1_side).toLowerCase();
-      if (hideWest.checked && ["west", "crosses"].includes(highwaySide)) {
+      if (!zoneMatches(candidateZone(properties))) return false;
+      const roadConstraint = roadFilter.value;
+      const roadSide = roadConstraint === "all" ? "east" : clean(
+        roadConstraint === "public-road"
+          ? properties.first_public_road_side
+          : properties.highway_1_side
+      ).toLowerCase();
+      if (["west", "crosses"].includes(roadSide)) {
         return false;
       }
       const generationIca = Number(properties.pge_GenCapacity_kW);
-      return !(hideZeroIca.checked
+      return !(icaFilter.value === "nonzero"
         && properties.pge_GenCapacity_kW !== null
         && Number.isFinite(generationIca)
         && generationIca === 0);
     }
     function candidateMapFilter() {
       const conditions = ["all"];
-      if (hideWest.checked) {
-        conditions.push(["==", ["get", "highway_1_side"], "east"]);
+      const zoneValue = ["coalesce", ["get", "BASEZONE"], "Unclassified"];
+      if (zoneFilter.value === "focus") {
+        conditions.push(["in", zoneValue, ["literal", [...focusZones]]]);
+      } else if (zoneFilter.value === "other") {
+        conditions.push([
+          "!",
+          ["in", zoneValue, ["literal", [...focusZones, "RR", "RMR"]]]
+        ]);
+      } else if (zoneFilter.value !== "all") {
+        conditions.push(["==", zoneValue, zoneFilter.value]);
       }
-      if (hideZeroIca.checked) {
+      const roadConstraint = roadFilter.value;
+      if (roadConstraint !== "all") {
+        const roadProperty = roadConstraint === "public-road"
+          ? "first_public_road_side"
+          : "highway_1_side";
+        conditions.push(["==", ["get", roadProperty], "east"]);
+      }
+      if (icaFilter.value === "nonzero") {
         conditions.push([
           "!=",
           ["coalesce", ["get", "pge_GenCapacity_kW"], -1],
@@ -392,58 +708,99 @@
       });
     }
     function candidateDetailHtml(properties) {
-      const zone = clean(properties.BASEZONE) || "Unclassified";
+      const zone = candidateZone(properties);
       return `<div class="candidate-detail">
         <span>APN</span><b>${esc(properties.site_apns)}</b>
         <span>Jurisdiction</span><b>${esc(properties.planning_jurisdiction)}</b>
         <span>Zoning</span><b>${esc(zoneLabels[zone] || zone)}</b>
-        <span>Suitable land</span><b>${Number(properties.contiguous_acres).toFixed(1)} acres</b>
+        <span>Score / county rank</span><b>${Number(properties.score).toFixed(3)} / #${esc(properties.rank)}</b>
+        <span>Gross / suitable land</span><b>${Number(properties.gross_acres).toFixed(1)} / ${Number(properties.contiguous_acres).toFixed(1)} acres</b>
         <span>Generation ICA</span><b>${formatIca(properties.pge_GenCapacity_kW)}</b>
         <span>PV ICA (secondary)</span><b>${formatIca(properties.pge_GenericPVCapacity_kW)}</b>
+        <span>Feeder</span><b>${esc(properties.pge_FeederName)}</b>
         <span>Minimum 12 kV distance</span><b>${Number(properties.pge_distance_m).toFixed(0)} m</b>
+        <span>Highway 1</span><b>${esc(properties.highway_1_side)}, ${Number(properties.highway_1_distance_m).toFixed(0)} m</b>
+        <span>First public road</span><b>${esc(properties.first_public_road_side)}</b>
+        <span>Scenic exposure</span><b>${(Number(properties.highway_1_viewshed_exposure) * 100).toFixed(1)}%</b>
       </div>`;
     }
-    function renderCandidateList() {
-      const best = visibleCandidates.slice(0, MAX_VISIBLE);
-      const activeIndex = visibleCandidates.findIndex(
-        feature => candidateId(feature) === activeApn
-      );
-      if (activeIndex >= MAX_VISIBLE) best[MAX_VISIBLE - 1] = visibleCandidates[activeIndex];
-      displayed = best
-        .map(feature => ({
-          feature,
-          localRank: visibleCandidates.indexOf(feature) + 1,
-          anchor: parcelCenter(feature)
-        }))
+    function updateDisplayedFromScroll() {
+      const listBounds = list.getBoundingClientRect();
+      displayed = [...list.children]
+        .filter(row => row.dataset.inView === "true")
+        .filter(row => {
+          const bounds = row.getBoundingClientRect();
+          return bounds.bottom > listBounds.top && bounds.top < listBounds.bottom;
+        })
+        .slice(0, MAX_VISIBLE)
+        .map(row => {
+          const feature = candidates.find(
+            candidate => candidateId(candidate) === row.dataset.candidateId
+          );
+          return {
+            feature,
+            localRank: visibleRanks.get(candidateId(feature)),
+            anchor: parcelCenter(feature)
+          };
+        })
         .sort((left, right) => left.anchor.point.y - right.anchor.point.y);
-      visibleCount.textContent = `${best.length} of ${visibleCandidates.length}`;
+      updateMapCandidates();
+      requestAnimationFrame(drawLeaders);
+    }
+    function renderCandidateList() {
+      const inViewIds = new Set(visibleCandidates.map(candidateId));
+      visibleCount.textContent =
+        `${visibleCandidates.length} in view of ${filteredCandidates.length}`;
+      const pageCount = Math.max(
+        1,
+        Math.ceil(filteredCandidates.length / MAX_VISIBLE)
+      );
+      candidatePage = Math.min(candidatePage, pageCount - 1);
+      const pageStart = candidatePage * MAX_VISIBLE;
+      const pageCandidates = filteredCandidates.slice(
+        pageStart,
+        pageStart + MAX_VISIBLE
+      );
+      pageRange.textContent = filteredCandidates.length
+        ? `${pageStart + 1}–${pageStart + pageCandidates.length}`
+        : "0";
+      previousPage.disabled = candidatePage === 0;
+      nextPage.disabled = candidatePage >= pageCount - 1;
       list.replaceChildren();
       let activeRow = null;
-      for (const item of displayed) {
-        const properties = item.feature.properties;
-        const zone = clean(properties.BASEZONE) || "Unclassified";
+      for (const feature of pageCandidates) {
+        const properties = feature.properties;
+        const zone = candidateZone(properties);
         const row = document.createElement("li");
         row.className = "candidate-item";
+        row.dataset.candidateId = candidateId(feature);
+        const isInView = inViewIds.has(candidateId(feature));
+        row.dataset.inView = String(isInView);
         const button = document.createElement("button");
-        const isActive = candidateId(item.feature) === activeApn;
+        const isActive = candidateId(feature) === activeApn;
         button.className = `candidate${isActive ? " active" : ""}`;
         button.type = "button";
+        button.disabled = !isInView;
         button.setAttribute("aria-expanded", String(isActive));
-        button.style.setProperty("--zone", candidateColor(properties));
-        button.innerHTML = `<span class="rank">${item.localRank}</span>
+        const localRank = isInView
+          ? visibleRanks.get(candidateId(feature))
+          : "—";
+        button.innerHTML = `<span class="rank">${localRank}</span>
+          <span class="zone-code">${esc(zoneCode(zone))}</span>
           <span class="address">${esc(address(properties))}</span>
-          <span class="details">County #${esc(properties.rank)} &middot;
-          ${esc(zoneLabels[zone] || zone)} &middot;
-          ${formatIca(properties.pge_GenCapacity_kW)} generation ICA</span>`;
+          <span class="details">${formatIca(properties.pge_GenCapacity_kW)}
+          generation ICA &middot;
+          ${Number(properties.contiguous_acres).toFixed(1)} suitable ac &middot;
+          ${Number(properties.pge_distance_m).toFixed(0)} m to 12 kV</span>`;
         button.addEventListener("click", () => {
-          if (activeApn === candidateId(item.feature)) {
+          if (activeApn === candidateId(feature)) {
             activeApn = null;
             renderCandidateList();
             return;
           }
-          activeApn = candidateId(item.feature);
+          activeApn = candidateId(feature);
           renderCandidateList();
-          const extent = item.feature._bounds;
+          const extent = feature._bounds;
           map.fitBounds([[extent[0], extent[1]], [extent[2], extent[3]]], {
             maxZoom: 15,
             padding: 70
@@ -456,24 +813,53 @@
         }
         list.append(row);
       }
-      updateMapCandidates();
       requestAnimationFrame(() => {
         activeRow?.scrollIntoView({ block: "nearest" });
-        drawLeaders();
+        updateDisplayedFromScroll();
       });
     }
     function updateVisibleCandidates() {
       if (!candidates.length) return;
+      candidatePage = 0;
       const bounds = map.getBounds();
-      visibleCandidates = candidates
-        .filter(feature => intersectsView(feature, bounds))
+      filteredCandidates = candidates
         .filter(passesCandidateFilters)
-        .sort((left, right) => Number(right.properties.score) - Number(left.properties.score));
-      renderZoneLegend();
+        .sort(compareCandidates);
+      renderZoneCounts();
+      visibleCandidates = filteredCandidates.filter(
+        feature => intersectsView(feature, bounds)
+      );
+      visibleRanks = new Map(
+        visibleCandidates.map((feature, index) => [candidateId(feature), index + 1])
+      );
+      visibleCandidates.sort(rankWindowThenNorth);
+      const visibleIds = new Set(visibleCandidates.map(candidateId));
+      filteredCandidates = [
+        ...visibleCandidates,
+        ...filteredCandidates
+          .filter(feature => !visibleIds.has(candidateId(feature)))
+          .sort(northToSouth)
+      ];
       if (!visibleCandidates.some(feature => candidateId(feature) === activeApn)) {
         activeApn = null;
       }
       renderCandidateList();
+    }
+    function showAllCandidates(animate = true) {
+      const allFilteredCandidates = candidates.filter(passesCandidateFilters);
+      if (!allFilteredCandidates.length) return;
+      const extent = allFilteredCandidates.reduce((bounds, feature) => {
+        bounds[0] = Math.min(bounds[0], feature._bounds[0]);
+        bounds[1] = Math.min(bounds[1], feature._bounds[1]);
+        bounds[2] = Math.max(bounds[2], feature._bounds[2]);
+        bounds[3] = Math.max(bounds[3], feature._bounds[3]);
+        return bounds;
+      }, [Infinity, Infinity, -Infinity, -Infinity]);
+      map.fitBounds([[extent[0], extent[1]], [extent[2], extent[3]]], {
+        duration: animate ? 500 : 0,
+        padding: 36,
+        maxZoom: 15
+      });
     }
     function drawLeaders() {
       const appRect = app.getBoundingClientRect();
@@ -482,9 +868,13 @@
       leaders.replaceChildren();
       if (!displayed.length) return;
       const routeX = mapRect.left - appRect.left + 12;
-      [...list.children].forEach((row, index) => {
+      for (const item of displayed) {
+        const row = [...list.children].find(
+          candidate => candidate.dataset.candidateId === candidateId(item.feature)
+        );
+        if (!row) continue;
         const rowRect = row.querySelector(".candidate").getBoundingClientRect();
-        const anchor = parcelCenter(displayed[index].feature).point;
+        const anchor = parcelCenter(item.feature).point;
         const startX = rowRect.right - appRect.left;
         const startY = rowRect.top + rowRect.height / 2 - appRect.top;
         const targetX = mapRect.left - appRect.left + anchor.x;
@@ -502,12 +892,27 @@
         marker.setAttribute("cy", targetY.toFixed(1));
         marker.setAttribute("r", "3");
         leaders.append(marker);
-      });
+      }
     }
-    function addDataLayers(ica, grid, candidateData) {
+    function addDataLayers(ica, grid, candidateData, transmission, substations) {
       candidates = candidateData.features.map(feature => {
         feature._bounds = featureBounds(feature);
         return feature;
+      });
+      map.addSource("aerial", {
+        type: "raster",
+        tiles: [
+          "https://server.arcgisonline.com/ArcGIS/rest/services/" +
+          "World_Imagery/MapServer/tile/{z}/{y}/{x}"
+        ],
+        tileSize: 256,
+        attribution: "Imagery &copy; Esri and contributors"
+      });
+      map.addLayer({
+        id: "aerial",
+        type: "raster",
+        source: "aerial",
+        layout: { visibility: "none" }
       });
       map.addSource("distribution-grid", { type: "geojson", data: grid });
       map.addLayer({
@@ -536,6 +941,49 @@
             "#15583b"
           ],
           "line-width": 4
+        }
+      });
+      map.addSource("transmission", { type: "geojson", data: transmission });
+      map.addLayer({
+        id: "transmission-casing",
+        type: "line",
+        source: "transmission",
+        paint: { "line-color": "#fffdf7", "line-width": 5, "line-opacity": .82 }
+      });
+      map.addLayer({
+        id: "transmission",
+        type: "line",
+        source: "transmission",
+        paint: { "line-color": "#6a3d9a", "line-width": 2.4, "line-opacity": .82 }
+      });
+      map.addSource("substations", { type: "geojson", data: substations });
+      map.addLayer({
+        id: "substations",
+        type: "circle",
+        source: "substations",
+        paint: {
+          "circle-color": "#fffdf7",
+          "circle-radius": 5,
+          "circle-stroke-color": "#173128",
+          "circle-stroke-width": 2
+        }
+      });
+      map.addLayer({
+        id: "substation-labels",
+        type: "symbol",
+        source: "substations",
+        minzoom: 10,
+        layout: {
+          "text-field": ["coalesce", ["get", "SubstationName"], "Substation"],
+          "text-font": ["Noto Sans Regular"],
+          "text-offset": [0.8, 0],
+          "text-anchor": "left",
+          "text-size": 11
+        },
+        paint: {
+          "text-color": "#173128",
+          "text-halo-color": "#fffdf7",
+          "text-halo-width": 2
         }
       });
       map.addSource("candidates", { type: "geojson", data: candidateData });
@@ -595,12 +1043,20 @@
         );
         if (!selected) return;
         activeApn = candidateId(selected);
+        candidatePage = Math.floor(
+          (visibleRanks.get(activeApn) - 1) / MAX_VISIBLE
+        );
         renderCandidateList();
       });
       map.on("mouseenter", "candidate-fill", () => { map.getCanvas().style.cursor = "pointer"; });
       map.on("mouseleave", "candidate-fill", () => { map.getCanvas().style.cursor = ""; });
+      applyMapControls();
       status.hidden = true;
-      updateVisibleCandidates();
+      requestAnimationFrame(() => {
+        map.resize();
+        showAllCandidates(false);
+        updateVisibleCandidates();
+      });
     }
 
     map.on("load", async () => {
@@ -608,7 +1064,9 @@
         const responses = await Promise.all([
           fetch("ica-sections.geojson"),
           fetch("distribution-grid.geojson"),
-          fetch("grid-candidates.geojson")
+          fetch("ranked-parcels.geojson"),
+          fetch("transmission-lines.geojson"),
+          fetch("distribution-substations.geojson")
         ]);
         if (responses.some(response => !response.ok)) {
           throw new Error("One or more generated map layers could not be loaded");
@@ -621,9 +1079,51 @@
     map.on("move", drawLeaders);
     map.on("moveend", updateVisibleCandidates);
     map.on("resize", () => requestAnimationFrame(drawLeaders));
-    list.addEventListener("scroll", drawLeaders);
-    hideWest.addEventListener("change", updateVisibleCandidates);
-    hideZeroIca.addEventListener("change", updateVisibleCandidates);
+    list.addEventListener("scroll", updateDisplayedFromScroll);
+    previousPage.addEventListener("click", () => {
+      candidatePage -= 1;
+      renderCandidateList();
+    });
+    nextPage.addEventListener("click", () => {
+      candidatePage += 1;
+      renderCandidateList();
+    });
+    icaFilter.addEventListener("change", updateVisibleCandidates);
+    roadFilter.addEventListener("change", updateVisibleCandidates);
+    zoneFilter.addEventListener("change", updateVisibleCandidates);
+    candidateSort.addEventListener("change", updateVisibleCandidates);
+    document.querySelector("#show-all").addEventListener("click", showAllCandidates);
+    function applyMapControls() {
+      if (map.getLayer("aerial")) {
+        map.setLayoutProperty(
+          "aerial",
+          "visibility",
+          document.querySelector("#basemap").value === "aerial" ? "visible" : "none"
+        );
+      }
+      for (const [controlId, layerIds] of Object.entries(visibilityControls)) {
+        const visibility = document.querySelector(`#${controlId}`).checked
+          ? "visible"
+          : "none";
+        for (const layerId of layerIds) {
+          if (map.getLayer(layerId)) {
+            map.setLayoutProperty(layerId, "visibility", visibility);
+          }
+        }
+      }
+    }
+    const visibilityControls = {
+      "show-distribution": ["distribution-grid", "ica-casing", "ica"],
+      "show-transmission": ["transmission-casing", "transmission"],
+      "show-substations": ["substations", "substation-labels"]
+    };
+    document.querySelector("#basemap").addEventListener("change", applyMapControls);
+    for (const controlId of Object.keys(visibilityControls)) {
+      document.querySelector(`#${controlId}`).addEventListener(
+        "change",
+        applyMapControls
+      );
+    }
     new ResizeObserver(() => {
       map.resize();
       drawLeaders();

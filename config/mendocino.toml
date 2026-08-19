@@ -103,6 +103,14 @@ fields = ["OBJECTID", "Route", "County", "AlignCode"]
 filename = "highway-1.geojson"
 required = true
 
+[sources.public_roads]
+kind = "arcgis-vector"
+url = "https://services5.arcgis.com/8y4r60VTvWj2wnDH/arcgis/rest/services/Road_Centerlines/FeatureServer/0"
+where = "OWNERSHIP IN ('COUNTY', 'STATE', 'USFS', 'UKIAH', 'FORT BRAGG', 'WILLITS', 'BLM', 'USA', 'POINT ARENA', 'STATE PARKS', 'BIA')"
+fields = ["OBJECTID", "NAME", "OWNERSHIP"]
+filename = "public-roads.geojson"
+required = true
+
 [sources.pge_ica]
 kind = "arcgis-vector"
 url = "https://services2.arcgis.com/mJaJSax0KPHoCNB6/ArcGIS/rest/services/DRPComplianceRelProd/FeatureServer/3"

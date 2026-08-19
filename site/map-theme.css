@@ -37,7 +37,8 @@ header p,
   color: var(--map-muted);
 }
 
-input[type="checkbox"] { accent-color: var(--map-ink); }
+input[type="checkbox"],
+input[type="radio"] { accent-color: var(--map-ink); }
 
 .leaflet-control-layers,
 .leaflet-bar,
