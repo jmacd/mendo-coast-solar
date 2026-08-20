@@ -105,4 +105,6 @@ def test_candidate_explorer_loads_layers_and_ranks_visible_candidates():
     assert 'feature.properties.first_public_road_side === "east"' in content
     assert 'feature.properties.highway_1_side === "east"' in content
     assert 'id: "candidate-highlight-fill"' in content
+    assert '"line-opacity": .9, "line-width": 2.25' in content
+    assert 'id: "candidate-highlight-outline"' not in content
     assert 'href="map-theme.css"' in content
