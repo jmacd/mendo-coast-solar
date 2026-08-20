@@ -1003,7 +1003,7 @@
         id: "candidate-outline",
         type: "line",
         source: "candidates",
-        paint: { "line-color": zoneExpression, "line-opacity": .45, "line-width": 1 }
+        paint: { "line-color": zoneExpression, "line-opacity": .9, "line-width": 2.25 }
       });
       map.addSource("candidate-highlights", {
         type: "geojson",
@@ -1014,12 +1014,6 @@
         type: "fill",
         source: "candidate-highlights",
         paint: { "fill-color": zoneExpression, "fill-opacity": .52 }
-      });
-      map.addLayer({
-        id: "candidate-highlight-outline",
-        type: "line",
-        source: "candidate-highlights",
-        paint: { "line-color": zoneExpression, "line-width": 2.75 }
       });
       map.addSource("candidate-active", {
         type: "geojson",
