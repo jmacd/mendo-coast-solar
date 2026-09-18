@@ -94,18 +94,19 @@ def test_candidate_sites_combine_sections_with_same_apn_only():
     assert result.iloc[0].geometry.area / ACRE_M2 == pytest.approx(12, abs=0.001)
 
 
-def test_nearest_pge_join_does_not_prefer_distant_high_ica_section():
+def test_nearest_pge_join_uses_nearest_qualifying_phase_section():
     parcels = gpd.GeoDataFrame(
         geometry=[box(0, 0, 10, 10)],
         crs="EPSG:3310",
     )
     lines = gpd.GeoDataFrame(
         {
-            "CSV_LineSection": ["nearest", "higher-ica"],
-            "GenericPVCapacity_kW": [186.0, 319.0],
-            "phase_cnt": [3, 3],
+            "CSV_LineSection": ["split-phase", "nearest-3-phase", "higher-ica"],
+            "GenericPVCapacity_kW": [0.0, 186.0, 319.0],
+            "phase_cnt": [2, 3, 3],
         },
         geometry=[
+            LineString([(15, 0), (15, 10)]),
             LineString([(20, 0), (20, 10)]),
             LineString([(450, 0), (450, 10)]),
         ],
@@ -117,10 +118,12 @@ def test_nearest_pge_join_does_not_prefer_distant_high_ica_section():
         lines,
         ["CSV_LineSection", "GenericPVCapacity_kW", "phase_cnt"],
         max_distance_m=1000,
+        required_phase_count=3,
     )
 
-    assert result.iloc[0]["CSV_LineSection"] == "nearest"
+    assert result.iloc[0]["CSV_LineSection"] == "nearest-3-phase"
     assert result.iloc[0]["GenericPVCapacity_kW"] == 186
+    assert result.iloc[0]["phase_cnt"] == 3
     assert result.iloc[0]["pge_distance_m"] == pytest.approx(10)
 
 

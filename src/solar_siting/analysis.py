@@ -594,8 +594,16 @@ def nearest_pge_join(
     lines: gpd.GeoDataFrame,
     columns: list[str],
     max_distance_m: float,
+    required_phase_count: int,
 ) -> gpd.GeoDataFrame:
-    index = lines.sindex
+    qualifying_lines = lines[
+        lines["phase_cnt"].fillna(0) >= required_phase_count
+    ].copy()
+    if qualifying_lines.empty:
+        raise ValueError(
+            f"No PG&E ICA sections meet the {required_phase_count}-phase requirement"
+        )
+    index = qualifying_lines.sindex
     rows = []
     for parcel_index, geometry in parcels.geometry.items():
         matches = index.query(
@@ -604,7 +612,9 @@ def nearest_pge_join(
             distance=max_distance_m,
         )
         if len(matches):
-            candidates = lines.iloc[matches][columns + ["geometry"]].copy()
+            candidates = qualifying_lines.iloc[matches][
+                columns + ["geometry"]
+            ].copy()
             candidates["pge_distance_m"] = candidates.geometry.distance(geometry)
             candidates = candidates.sort_values(
                 ["pge_distance_m", "CSV_LineSection"],
@@ -615,7 +625,7 @@ def nearest_pge_join(
         else:
             fallback = _nearest_join(
                 parcels.loc[[parcel_index]],
-                lines,
+                qualifying_lines,
                 columns,
                 "pge_distance_m",
             )
@@ -970,6 +980,7 @@ def analyze(
         pge_ica,
         pge_columns,
         settings["max_distribution_distance_m"],
+        settings["required_phase_count"],
     )
     print("PG&E ICA join complete", flush=True)
     parcels["pge_distance_m"] = pge_nearest["pge_distance_m"]
