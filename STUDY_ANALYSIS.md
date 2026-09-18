@@ -114,10 +114,11 @@ is 5.5 acres per MW, used only to estimate physical nameplate potential.
 
 ### Distribution sections
 
-The model assigns each site its nearest mapped PG&E ICA line section. It does
-not assume that a more distant section with higher published ICA is a feasible
-point of interconnection. The one-kilometer distance and three-phase
-requirements are then applied to that nearest section.
+The model assigns each site its nearest mapped PG&E ICA line section meeting
+the three-phase requirement. It ignores closer split-phase branches, but does
+not assume that a more distant three-phase section with higher published ICA
+is a feasible point of interconnection. The one-kilometer distance requirement
+is then applied to the selected section.
 
 It records:
 

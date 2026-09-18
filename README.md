@@ -260,7 +260,8 @@ as follows:
    below 10 degrees slope. Greenfields use NLCD classes 31, 52, 71, and 81.
    Industrial reuse candidates may also use low-intensity developed classes 21
    and 22.
-10. Join nearby PG&E three-phase distribution sections and feeder information.
+10. Join the nearest qualifying PG&E three-phase distribution section and
+    feeder information.
 11. Calculate solar resource, infrastructure, land, and development metrics;
     retain feeder demand and transmission proximity as diagnostics.
 
@@ -279,9 +280,10 @@ affect rank.
 
 Distribution proximity is already scored as
 `exp(-pge_distance_m / 1,000)`. The distance is measured from the screened
-candidate geometry to the nearest mapped ICA line section that supplies the
-site's ICA values. It is a lower-bound, straight-line diagnostic, not an
-engineered extension route: conductor routing, access, easements, poles,
+candidate geometry to the nearest mapped ICA line section meeting the
+three-phase requirement; closer split-phase branches are not candidate
+interconnection sections. It is a lower-bound, straight-line diagnostic, not
+an engineered extension route: conductor routing, access, easements, poles,
 switching, and the utility-selected point of interconnection can increase
 actual connection length and cost.
 
